@@ -1,1 +1,21 @@
-{ "id": "L-103", "lang": "en", "lines": [ { "start": 0, "end": 4, "text": "Welcome to the lesson." } ] }
+{
+  "id": "L-103",
+  "lang": "en",
+  "lines": [
+    { "start": 0, "end": 7.5, "text": "For the last 10 years, pretty much everything I need to learn now is through Google, YouTube, and Wikipedia." },
+    { "start": 7.5, "end": 16.8, "text": "I've never needed to go to a lecture, a presentation, and I feel a little bit odd being in this situation now," },
+    { "start": 16.8, "end": 23.5, "text": "given how I think learning happens these days, at least from my point of view." },
+    { "start": 23.5, "end": 30.8, "text": "And most of everything I learn, when I reflect on it, happened in chunks of 4 minutes and 12 seconds." },
+    { "start": 30.8, "end": 37, "text": "4 minutes and 12 seconds is the average video length of a YouTube video." },
+    { "start": 37, "end": 44.8, "text": "And I do notice that music videos seem to operate around that mark, and my attention span does seem to be held in that genre, music video." },
+    { "start": 44.8, "end": 55.8, "text": "When I listen to lectures, and in fact I've got a link to a lecture called 'An Anthropological Introduction to YouTube' by Michael Wesch from Kansas," },
+    { "start": 55.8, "end": 64.2, "text": "it's a 60-minute long video to the Library of Congress. He won the Professor of the Year in 2009," },
+    { "start": 64.2, "end": 71.8, "text": "and it does give us an anthropological view of the phenomenon of YouTube. But it's 60 minutes long." },
+    { "start": 71.8, "end": 81, "text": "But when I listened to it again last night to check if I would share it with you—the link to it that is—" },
+    { "start": 81, "end": 89, "text": "I noticed again, all the points he's making come in 4-minute chunks, round about." },
+    { "start": 89, "end": 97.5, "text": "So in fact, it's a video 60 minutes long made up of however many 4-minute 12-second videos can fit in that time span." },
+    { "start": 97.5, "end": 109, "text": "On the other hand, when I listen to an Echo360 of your average educationally untrained, but professionally trained, lecture," },
+    { "start": 109, "end": 116.8, "text": "that chunking of points is not so clear. Often one point can ramble on for 15 minutes, or more." },
+    { "start": 116.8, "end": 120, "text": "So I'm going on the premise that all learning happens today, at least, in 4 minutes and 12 seconds." }
+  ]
+}

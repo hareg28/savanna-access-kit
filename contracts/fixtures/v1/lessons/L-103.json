@@ -1,7 +1,7 @@
 {
   "id": "L-103",
   "title": { "en": "Full lesson (sign, audio description, offline pack)", "am": "ሙሉ ትምህርት" },
-  "durationSec": 12,
+  "durationSec": 120,
   "media": { "video": "http://localhost:4010/media/lesson.mp4", "audio": "http://localhost:4010/media/lesson.opus" },
   "captions": [
     { "lang": "en", "url": "http://localhost:4010/media/en.vtt" },
@@ -14,5 +14,25 @@
     "extended": true
   },
   "transcript": { "url": "/v1/lessons/L-103/transcript" },
-  "pack": { "manifestUrl": "/v1/lessons/L-103/pack", "sizeBytes": 1800000 }
+  "pack": { "manifestUrl": "/v1/lessons/L-103/pack", "sizeBytes": 1800000 },
+  "access": {
+    "captions": [
+      { "lang": "en", "status": "reviewed" },
+      { "lang": "am", "status": "reviewed" }
+    ],
+    "sign": true,
+    "audioDescription": {
+      "recorded": true,
+      "text": true
+    },
+    "offline": {
+      "sizeBytes": 1800000
+    },
+    "transcript": true,
+    "summary": false
+  },
+  "share": {
+    "url": "/v1/lessons/L-103/share.html",
+    "sizeBytes": 1800000
+  }
 }

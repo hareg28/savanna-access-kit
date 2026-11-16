@@ -10,6 +10,8 @@ pipeline-out/
 test-videos/
 
 # Local documentation (not for repo)
+*.zip
+!contracts/fixtures/**/*.zip
 MEMBER2_IMPLEMENTATION_GUIDE.md
 MEMBER2_README.md
 START_HERE.txt

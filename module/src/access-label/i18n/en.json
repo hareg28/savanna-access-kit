@@ -1,0 +1,23 @@
+{
+  "label.title": "Access Features",
+  "label.captions": "Captions",
+  "label.captionsNone": "Captions: none",
+  "label.statusReviewed": "reviewed",
+  "label.statusDraft": "draft, being reviewed",
+  "label.sign": "Sign language",
+  "label.signYes": "Sign language: yes",
+  "label.signNo": "Sign language: not yet",
+  "label.ad": "Audio description",
+  "label.adYes": "Audio description: yes",
+  "label.adNo": "Audio description: no",
+  "label.offline": "Offline",
+  "label.offlineSize": "Offline: {size} MB",
+  "label.offlineNo": "Offline: not yet",
+  "label.transcript": "Transcript and summary",
+  "label.transcriptYes": "Transcript and summary: yes",
+  "label.transcriptNo": "Transcript and summary: no",
+  "label.reading": "Reading",
+  "label.readingPlain": "Reading: plain language",
+  "label.loading": "Loading access label...",
+  "label.error": "Could not load access features"
+}

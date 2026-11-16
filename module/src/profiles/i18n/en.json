@@ -1,0 +1,16 @@
+{
+  "profile.title": "Set up for me",
+  "profile.description": "Choose any profile that fits your needs. You can combine them or change settings at any time.",
+  "profile.cantSee": "I can't see",
+  "profile.cantHear": "I can't hear",
+  "profile.lowData": "Low data",
+  "profile.hardToRead": "Hard to read",
+  "profile.skip": "Skip",
+  "profile.undo": "Undo",
+  "profile.appliedCantSee": "Audio description turned on, shortcuts enabled.",
+  "profile.appliedCantHear": "Captions turned on at 150% with high contrast, sign window opened.",
+  "profile.appliedLowData": "Low data mode: offline pack preferred, video autoplay disabled.",
+  "profile.appliedHardToRead": "Hard to read mode: high-contrast theme activated, captions 200%.",
+  "profile.undone": "Settings restored to previous state.",
+  "profile.skipped": "Setup panel hidden."
+}

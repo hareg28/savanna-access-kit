@@ -29,4 +29,7 @@ export interface Store {
   getTranscript(lessonId: string, lang: Lang): Promise<Transcript | null>;
   getPreferences(userHash: string): Promise<Preferences | null>;
   setPreferences(userHash: string, prefs: Preferences): Promise<void>;
+  deletePreferences(userHash: string): Promise<void>;
+  saveCaption(lessonId: string, lang: Lang, vttContent: string, reviewed?: boolean): Promise<{ url: string; reviewed: boolean }>;
+  getCaption?(lessonId: string, lang: Lang): Promise<string | null>;
 }

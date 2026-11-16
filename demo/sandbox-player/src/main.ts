@@ -267,6 +267,13 @@ const hostI18n = {
         sideHint: 'Press <kbd>?</kbd> anytime on the player for keyboard shortcuts help.',
         signTitle: 'ESL Sign Window',
         signHint: '(Press S to toggle)',
+        alxHeroIntro: 'Every day, artificial intelligence transforms standard administrative routines. In modern distributed workplaces, remote Virtual Assistants pair AI automation with critical human judgment, empathetic communication, and reliable client trust.',
+        objectivesHeading: 'By the end of this lesson, you should be able to:',
+        obj1: 'Explain the evolving role of Virtual Assistants in AI-enabled, remote-first organizations.',
+        obj2: 'Describe how human judgment and empathetic communication complement automated generative tools.',
+        obj3: 'Determine the strategic value of specialized workflows, CRM administration, and project coordination.',
+        obj4: 'Differentiate between raw AI-generated drafts and trustworthy, client-ready deliverables.',
+        obj5: 'Leverage universal accessibility accommodations (captions, sign language, and audio description) for inclusive teamwork.',
     },
     am: {
         brand: 'የትምህርት ፖርታል',
@@ -310,6 +317,13 @@ const hostI18n = {
         sideHint: 'የቁልፍ ሰሌዳ አቋራጮች እገዛ ለማግኘት በማጫወቻው ላይ በማንኛውም ጊዜ <kbd>?</kbd>ን ይጫኑ።',
         signTitle: 'የምልክት ቋንቋ መስኮት (ESL)',
         signHint: '(ለማብራት/ማጥፋት S ይጫኑ)',
+        alxHeroIntro: 'በየቀኑ፣ አርቴፊሻል ኢንተለጀንስ መደበኛ የአስተዳደር ሥራዎችን ይለውጣል። በዘመናዊ የርቀት የሥራ ቦታዎች፣ የቨርቹዋል ረዳቶች የ AI አውቶሜሽንን ከሰው ልጅ ሂሳዊ ፍርድ፣ የርኅራኄ ተግባቦት እና አስተማማኝ የደንበኛ እምነት ጋር ያጣምራሉ።',
+        objectivesHeading: 'በዚህ ትምህርት መጨረሻ ላይ የሚከተሉትን ማከናወን ይችላሉ፡',
+        obj1: 'በ AI በተደገፉ የርቀት ድርጅቶች ውስጥ የቨርቹዋል ረዳቶችን እያደገ የመጣ ሚና ማስረዳት።',
+        obj2: 'የሰው ልጅ ውሳኔ እና የርኅራኄ ተግባቦት አውቶሜትድ የሆኑ የፈጠራ መሣሪያዎችን እንዴት እንደሚያሟሉ መግለጽ።',
+        obj3: 'የተለዩ የሥራ ፍሰቶች፣ የ CRM አስተዳደር እና የፕሮጀክት ቅንጅት ስልታዊ ጠቀሜታን መወሰን።',
+        obj4: 'በ AI ከተዘጋጁ ያልተጣሩ ረቂቆች እና ለደንበኛ ዝግጁ ከሆኑ አስተማማኝ ውጤቶች መካከል ያለውን ልዩነት መለየት።',
+        obj5: 'ሁሉን አቀፍ የቡድን ሥራን ለማሳካት ዓለም አቀፍ የተደራሽነት ማመቻቸቶችን (የግርጌ ጽሑፍ፣ የምልክት ቋንቋ እና የድምጽ ማብራሪያ) መጠቀም።',
     }
 };
 
@@ -341,6 +355,14 @@ function applyHostLanguage(lang: 'en' | 'am'): void {
     setText('btn-load-l103', t.btnLoadL103);
     setText('btn-load-l102', t.btnLoadL102);
     setText('btn-after', t.btnAfter);
+
+    setText('alx-hero-intro', t.alxHeroIntro);
+    setText('objectives-heading', t.objectivesHeading);
+    setText('obj-1', t.obj1);
+    setText('obj-2', t.obj2);
+    setText('obj-3', t.obj3);
+    setText('obj-4', t.obj4);
+    setText('obj-5', t.obj5);
 
     setText('summary-heading', t.summaryHeading);
     setText('summary-card-text', isL102 ? t.summaryCardL102 : t.summaryCardL103);

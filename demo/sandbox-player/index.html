@@ -7,16 +7,17 @@
     <title>The Future of the VA Industry | Savanna Learning Portal</title>
     <style>
         :root {
-            --savanna-primary: #0b2545;
-            --savanna-primary-hover: #133a68;
-            --savanna-accent: #f59e0b;
+            --savanna-primary: #0f172a;
+            --savanna-primary-hover: #1e293b;
+            --savanna-brand-red: #e11d48;
+            --savanna-accent: #0284c7;
             --savanna-focus: #005fcc;
             --savanna-bg: #f8fafc;
             --savanna-surface: #ffffff;
             --savanna-border: #e2e8f0;
             --savanna-text-main: #0f172a;
             --savanna-text-muted: #64748b;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             color: var(--savanna-text-main);
             background-color: var(--savanna-bg);
             line-height: 1.6;
@@ -30,153 +31,344 @@
             margin: 0;
             padding: 0;
             background-color: var(--savanna-bg);
+            color: var(--savanna-text-main);
+            overflow-x: hidden;
         }
 
-        /* Top Navigation Bar */
+        /* Savanna ALX Learning Header (Image 2 Identity) */
+        .alx-header-wrapper {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background-color: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            width: 100%;
+        }
+
         .navbar {
-            background-color: var(--savanna-primary);
-            color: #ffffff;
-            padding: 0.75rem 1.5rem;
+            max-width: 1520px;
+            margin: 0 auto;
+            padding: 0.65rem 1.5rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+            gap: 1rem;
+            box-sizing: border-box;
+            width: 100%;
         }
 
         .navbar-brand {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            font-size: 1.15rem;
-            font-weight: 700;
+            gap: 0.85rem;
+            flex-shrink: 0;
         }
 
-        .navbar-brand .logo-tag {
-            background-color: var(--savanna-accent);
-            color: #0b2545;
-            font-size: 0.75rem;
-            padding: 2px 7px;
-            border-radius: 4px;
+        .nav-menu-btn {
+            background: transparent;
+            border: none;
+            color: #374151;
+            padding: 6px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 38px;
+            min-width: 38px;
+            transition: background 0.15s ease;
+        }
+
+        .nav-menu-btn:hover {
+            background: #f3f4f6;
+        }
+
+        .alx-logo {
+            font-size: 1.5rem;
             font-weight: 800;
-            text-transform: uppercase;
+            letter-spacing: -0.04em;
+            color: #111827;
+            display: inline-flex;
+            align-items: baseline;
+            text-decoration: none;
+        }
+
+        .alx-dot {
+            color: var(--savanna-brand-red);
+            font-size: 1.6rem;
+            line-height: 0;
+            margin-left: 1px;
+        }
+
+        .alx-divider {
+            width: 1px;
+            height: 20px;
+            background-color: #d1d5db;
+        }
+
+        .alx-portal-name {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: #1f2937;
+            letter-spacing: -0.01em;
         }
 
         .navbar-nav {
             display: flex;
             align-items: center;
-            gap: 1rem;
-            font-size: 0.85rem;
+            gap: 0.75rem;
+            flex-wrap: wrap;
         }
 
-        .badge-learner {
-            background-color: rgba(255, 255, 255, 0.16);
+        .gamification-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+            border-radius: 9999px;
             padding: 4px 10px;
-            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            white-space: nowrap;
         }
 
-        /* Page Layout */
+        .user-avatar-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 9999px;
+            padding: 3px 8px 3px 3px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #334155;
+            white-space: nowrap;
+        }
+
+        .user-avatar-circle {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #334155;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+
+        /* 3px ALX Red Accent Bar */
+        .alx-top-accent-bar {
+            height: 3px;
+            width: 100%;
+            background: linear-gradient(90deg, #e11d48 0%, #f43f5e 50%, #fb7185 100%);
+        }
+
+        /* Full Width Container without Sidebar (Requirement 1) */
         .container {
-            max-width: 1440px;
+            max-width: 1520px;
             margin: 1.5rem auto;
-            padding: 0 1rem;
-            display: grid;
-            grid-template-columns: 1fr 280px;
-            gap: 1.5rem;
-        }
-
-        @media (max-width: 860px) {
-            .container {
-                grid-template-columns: 1fr;
-            }
+            padding: 0 1.5rem;
+            display: block;
+            box-sizing: border-box;
+            width: 100%;
         }
 
         /* Breadcrumb */
         .breadcrumb {
-            grid-column: 1 / -1;
             font-size: 0.85rem;
             color: var(--savanna-text-muted);
-            margin-bottom: -0.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            flex-wrap: wrap;
         }
 
         .breadcrumb a {
             color: #0369a1;
-            text-decoration: underline;
+            text-decoration: none;
+            font-weight: 500;
         }
 
         .breadcrumb a:hover,
         .breadcrumb a:focus-visible {
             color: #0c4a6e;
+            text-decoration: underline;
         }
 
-        /* Main Lesson Area */
+        .breadcrumb-sep {
+            color: #94a3b8;
+        }
+
+        /* Main Lesson Card */
         .lesson-main {
             background-color: var(--savanna-surface);
             border: 1px solid var(--savanna-border);
-            border-radius: 8px;
-            padding: 1.5rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            border-radius: 12px;
+            padding: 1.75rem;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+            box-sizing: border-box;
+            width: 100%;
         }
 
         .lesson-header {
-            margin-bottom: 1rem;
-            border-bottom: 1px solid var(--savanna-border);
-            padding-bottom: 0.75rem;
+            margin-bottom: 1.25rem;
         }
 
         .lesson-meta {
             display: flex;
             gap: 0.75rem;
             align-items: center;
-            font-size: 0.82rem;
+            font-size: 0.85rem;
             color: var(--savanna-text-muted);
-            margin-bottom: 0.35rem;
+            margin-bottom: 0.5rem;
+            flex-wrap: wrap;
         }
 
         .badge-lesson-id {
-            background-color: #e0f2fe;
-            color: #0369a1;
-            font-weight: 600;
-            padding: 2px 7px;
-            border-radius: 4px;
+            background-color: #fee2e2;
+            color: #991b1b;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
         }
 
         .lesson-title {
             margin: 0;
-            font-size: 1.5rem;
-            color: #0b2545;
-            font-weight: 700;
+            font-size: 1.85rem;
+            color: #0f172a;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            word-break: break-word;
         }
 
-        .lesson-title-am {
-            font-size: 1rem;
-            color: var(--savanna-text-muted);
-            font-weight: 400;
-            margin: 0.2rem 0 0 0;
+        /* Savanna ALX Learning Banner Card (Image 2 Identity) */
+        .alx-hero-banner {
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+            border-radius: 10px;
+            padding: 1.25rem 1.75rem;
+            color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 4px 14px rgba(30, 27, 75, 0.18);
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        .alx-hero-intro {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #e0e7ff;
+            max-width: 850px;
+        }
+
+        .alx-hero-brand-mark {
+            font-size: 1.75rem;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            color: #ffffff;
+            display: flex;
+            align-items: baseline;
+            opacity: 0.9;
+            flex-shrink: 0;
+        }
+
+        /* Savanna ALX Learning Objectives Box (Image 2 Identity) */
+        .alx-objectives-card {
+            background-color: #f0f9ff;
+            border: 1.5px solid #bae6fd;
+            border-radius: 10px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1.25rem;
+            align-items: flex-start;
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        .alx-objectives-icon {
+            flex-shrink: 0;
+            width: 48px;
+            height: 48px;
+            background: #e0f2fe;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0284c7;
+            margin-top: 2px;
+        }
+
+        .alx-objectives-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .alx-objectives-heading {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #0c4a6e;
+            margin: 0 0 0.75rem 0;
+            word-break: break-word;
+        }
+
+        .alx-objectives-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .alx-objective-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            font-size: 0.88rem;
+            color: #1e293b;
+            line-height: 1.45;
+            word-break: break-word;
+        }
+
+        .alx-num-badge {
+            flex-shrink: 0;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background-color: #4338ca;
+            color: #ffffff;
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 1px;
         }
 
         /* Video Player Wrapper */
         .video-wrapper {
-            margin: 1rem 0;
+            margin: 1.25rem 0;
             background: transparent;
             position: relative;
             width: 100%;
+            box-sizing: border-box;
         }
 
-        /* Navigation Buttons */
+        /* Buttons & Navigation */
         button {
-            background-color: var(--savanna-primary);
-            color: #ffffff;
-            border: none;
-            padding: 0.45rem 0.9rem;
-            border-radius: 5px;
-            font-size: 0.85rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.15s ease;
-        }
-
-        button:hover {
-            background-color: var(--savanna-primary-hover);
+            font-family: inherit;
         }
 
         button:focus-visible,
@@ -185,70 +377,192 @@
             outline-offset: 2px;
         }
 
+        /* Modern Bottom Navigation Bar */
         .lesson-nav-bar {
             display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
             justify-content: space-between;
             align-items: center;
-            margin-top: 1rem;
-            padding-top: 0.75rem;
-            border-top: 1px solid var(--savanna-border);
-        }
-
-        /* Small Written Learning Content */
-        .learning-summary {
             margin-top: 1.5rem;
-            padding-top: 1rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid var(--savanna-border);
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .btn-nav-pill {
+            background-color: #ffffff;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+            padding: 0.55rem 1.15rem;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-sizing: border-box;
+        }
+
+        .btn-nav-pill:hover {
+            background-color: #f8fafc;
+            border-color: #94a3b8;
+            color: #0f172a;
+        }
+
+        .btn-nav-primary {
+            background-color: #0369a1;
+            color: #ffffff;
+            border-color: #0369a1;
+            font-weight: 700;
+        }
+
+        .btn-nav-primary:hover {
+            background-color: #075985;
+            border-color: #075985;
+            color: #ffffff;
+        }
+
+        .btn-nav-secondary {
+            background-color: #f1f5f9;
+            color: #334155;
+            border-color: #cbd5e1;
+        }
+
+        .btn-nav-secondary:hover {
+            background-color: #e2e8f0;
+            color: #0f172a;
+        }
+
+        @media (max-width: 640px) {
+            .navbar {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                padding: 0.5rem 0.75rem;
+            }
+
+            .navbar-nav {
+                flex-wrap: wrap;
+                gap: 0.4rem;
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .gamification-pill {
+                padding: 2px 7px;
+                font-size: 0.75rem;
+            }
+
+            .user-avatar-pill {
+                padding: 2px 7px 2px 2px;
+                font-size: 0.75rem;
+            }
+
+            .container {
+                margin: 0.5rem auto;
+                padding: 0 0.5rem;
+            }
+
+            .lesson-main {
+                padding: 0.85rem 0.65rem;
+            }
+
+            .alx-hero-banner {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+                padding: 1rem;
+            }
+
+            .alx-objectives-card {
+                flex-direction: column;
+                padding: 1rem 0.85rem;
+                gap: 0.6rem;
+            }
+
+            .alx-objectives-icon {
+                display: none;
+            }
+
+            .lesson-title {
+                font-size: 1.45rem;
+            }
+        }
+
+        /* Summary & Reflection Content */
+        .learning-summary {
+            margin-top: 1.75rem;
+            padding-top: 1.25rem;
             border-top: 1px solid var(--savanna-border);
         }
 
-        .learning-summary h3 {
-            font-size: 1.1rem;
-            color: #0b2545;
-            margin: 0 0 0.5rem 0;
+        .summary-heading {
+            font-size: 1.2rem;
+            color: #0f172a;
+            font-weight: 700;
+            margin: 0 0 0.75rem 0;
         }
 
         .summary-card {
             background-color: #f8fafc;
-            border-left: 4px solid var(--savanna-primary);
-            padding: 0.85rem 1rem;
-            border-radius: 0 6px 6px 0;
-            font-size: 0.9rem;
+            border-left: 4px solid #0284c7;
+            padding: 1rem 1.25rem;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.92rem;
             color: #334155;
-            line-height: 1.55;
-            margin-bottom: 1rem;
+            line-height: 1.6;
+            margin-bottom: 1.25rem;
+            border-top: 1px solid #e2e8f0;
+            border-right: 1px solid #e2e8f0;
+            border-bottom: 1px solid #e2e8f0;
         }
 
         .key-points {
-            font-size: 0.875rem;
+            font-size: 0.9rem;
             color: #334155;
-            margin: 0 0 1.25rem 0;
+            margin: 0 0 1.5rem 0;
             padding-left: 1.25rem;
-            line-height: 1.6;
+            line-height: 1.65;
         }
 
-        /* Small Notes / Reflection Field (Input Safety Test) */
+        .key-points li {
+            margin-bottom: 0.4rem;
+        }
+
+        /* Notes / Reflection Field */
         .notes-box {
-            background-color: #faf5ff;
-            border: 1px solid #e9d5ff;
-            border-radius: 6px;
-            padding: 0.85rem 1rem;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
         }
 
         .notes-box label {
             display: block;
-            font-weight: 600;
-            color: #6b21a8;
-            margin-bottom: 0.4rem;
-            font-size: 0.875rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 0.5rem;
+            font-size: 0.88rem;
         }
 
         input[type="text"] {
             width: 100%;
-            padding: 0.55rem 0.75rem;
+            padding: 0.65rem 0.85rem;
             border: 1px solid #cbd5e1;
-            border-radius: 5px;
+            border-radius: 6px;
             font-size: 0.9rem;
-            background: #fff;
+            background: #ffffff;
+            color: #0f172a;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        input[type="text"]:focus {
+            border-color: #0284c7;
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
         }
 
         /* Sidebar: Course Curriculum */
@@ -266,7 +580,7 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
         }
 
-        .side-card h4 {
+        .side-card h3 {
             margin: 0 0 0.65rem 0;
             font-size: 0.95rem;
             color: #0b2545;
@@ -371,34 +685,38 @@
 </head>
 
 <body>
-    <header class="navbar" role="banner">
-        <div class="navbar-brand">
-            <span class="logo-tag">Savanna</span>
-            <span id="nav-brand-title">Learning Portal</span>
-        </div>
-        <div class="navbar-nav" style="display: flex; align-items: center; gap: 0.75rem;">
-            <button
-                type="button"
-                id="btn-lang-toggle"
-                class="btn-lang-pill"
-                title="Switch UI Language (English / አማርኛ)"
-                style="background: rgba(255, 255, 255, 0.16); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 20px; padding: 4px 12px; font-size: 0.82rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px;"
-            >
-                🌐 አማርኛ (AM)
-            </button>
-            <span class="badge-learner" id="nav-learner-badge">Learner: Kidus T.</span>
-        </div>
-    </header>
+    <div class="alx-header-wrapper">
+        <header class="navbar" role="banner">
+            <div class="navbar-brand">
+                <button type="button" class="nav-menu-btn" aria-label="Navigation Menu">
+                    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <div class="alx-logo">alx<span class="alx-dot">.</span></div>
+                <div class="alx-divider"></div>
+                <span class="alx-portal-name" id="nav-brand-title">Learning</span>
+            </div>
+        </header>
+        <div class="alx-top-accent-bar" aria-hidden="true"></div>
+    </div>
+
     <div class="container">
         <!-- Breadcrumb Navigation -->
         <nav class="breadcrumb" aria-label="Breadcrumb">
-            <a href="#" id="crumb-courses">Courses</a> &gt; 
-            <a href="#" id="crumb-track">VA-1 Foundations</a> &gt; 
-            <a href="#" id="crumb-module">Module 2</a> &gt; 
-            <span id="breadcrumb-lesson">The Future of the VA Industry</span>
+            <a href="#" id="crumb-courses">Courses</a>
+            <span class="breadcrumb-sep">›</span>
+            <a href="#" id="crumb-track">VA-1 Foundations</a>
+            <span class="breadcrumb-sep">›</span>
+            <a href="#" id="crumb-module">Module 2</a>
+            <span class="breadcrumb-sep">›</span>
+            <span id="breadcrumb-lesson" style="color: #0f172a; font-weight: 600;">The Future of the VA Industry</span>
         </nav>
 
-        <!-- Main Video & Lesson Content -->
+        <!-- Main Video & Lesson Content (Full Width) -->
         <main class="lesson-main" id="content">
             <div class="lesson-header">
                 <div class="lesson-meta">
@@ -408,6 +726,62 @@
                 <h1 class="lesson-title" id="page-lesson-title">The Future of the VA Industry</h1>
             </div>
 
+            <!-- Savanna ALX Learning Hero Banner (Image 2 Identity) -->
+            <div class="alx-hero-banner" role="region" aria-label="Lesson Overview">
+                <div class="alx-hero-intro" id="alx-hero-intro">
+                    Every day, artificial intelligence transforms standard administrative routines. In modern
+                    distributed workplaces, remote Virtual Assistants pair AI automation with critical human judgment,
+                    empathetic communication, and reliable client trust.
+                </div>
+                <div class="alx-hero-brand-mark" aria-hidden="true">
+                    alx<span style="color: #f43f5e;">.</span>
+                </div>
+            </div>
+
+            <!-- Savanna ALX Learning Objectives Box (Image 2 Identity) -->
+            <section class="alx-objectives-card" aria-labelledby="objectives-heading">
+                <div class="alx-objectives-icon" aria-hidden="true">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                        <path d="m9 14 2 2 4-4"></path>
+                    </svg>
+                </div>
+                <div class="alx-objectives-content">
+                    <h2 class="alx-objectives-heading" id="objectives-heading">
+                        By the end of this lesson, you should be able to:
+                    </h2>
+                    <ol class="alx-objectives-list">
+                        <li class="alx-objective-item">
+                            <span class="alx-num-badge">1</span>
+                            <span id="obj-1">Explain the evolving role of Virtual Assistants in AI-enabled, remote-first
+                                organizations.</span>
+                        </li>
+                        <li class="alx-objective-item">
+                            <span class="alx-num-badge">2</span>
+                            <span id="obj-2">Describe how human judgment and empathetic communication complement automated
+                                generative tools.</span>
+                        </li>
+                        <li class="alx-objective-item">
+                            <span class="alx-num-badge">3</span>
+                            <span id="obj-3">Determine the strategic value of specialized workflows, CRM administration, and
+                                project coordination.</span>
+                        </li>
+                        <li class="alx-objective-item">
+                            <span class="alx-num-badge">4</span>
+                            <span id="obj-4">Differentiate between raw AI-generated drafts and trustworthy, client-ready
+                                deliverables.</span>
+                        </li>
+                        <li class="alx-objective-item">
+                            <span class="alx-num-badge">5</span>
+                            <span id="obj-5">Leverage universal accessibility accommodations (captions, sign language, and audio
+                                description) for inclusive teamwork.</span>
+                        </li>
+                    </ol>
+                </div>
+            </section>
+
             <!-- Video Player Area -->
             <div class="video-wrapper">
                 <!-- Fallback when JavaScript is disabled (SRS FR-P11, Task 1.7) -->
@@ -416,19 +790,24 @@
                         <div class="noscript-header">
                             <span class="noscript-icon">ℹ️</span>
                             <div>
-                                <h2 style="font-size: 1.15rem; margin: 0 0 0.25rem 0; color: #0b2545;">JavaScript is disabled in your browser</h2>
+                                <h2 style="font-size: 1.15rem; margin: 0 0 0.25rem 0; color: #0b2545;">JavaScript is
+                                    disabled in your browser</h2>
                                 <p style="margin: 0; font-size: 0.88rem; color: #475569;">
-                                    You can still follow this lesson completely using the direct media, caption, and transcript links below:
+                                    You can still follow this lesson completely using the direct media, caption, and
+                                    transcript links below:
                                 </p>
                             </div>
                         </div>
 
                         <!-- Direct media player fallback -->
                         <div style="margin: 1rem 0;">
-                            <video controls preload="metadata" style="width: 100%; max-height: 380px; border-radius: 6px; background: #000;">
+                            <video controls preload="metadata"
+                                style="width: 100%; max-height: 380px; border-radius: 6px; background: #000;">
                                 <source src="http://localhost:4010/media/lesson.mp4" type="video/mp4" />
-                                <track kind="subtitles" srclang="en" src="http://localhost:4010/media/en.vtt" label="English" default />
-                                <track kind="subtitles" srclang="am" src="http://localhost:4010/media/am.vtt" label="Amharic" />
+                                <track kind="subtitles" srclang="en" src="http://localhost:4010/media/en.vtt"
+                                    label="English" default />
+                                <track kind="subtitles" srclang="am" src="http://localhost:4010/media/am.vtt"
+                                    label="Amharic" />
                                 Your browser does not support HTML5 video.
                             </video>
                         </div>
@@ -453,7 +832,8 @@
                             <a href="http://localhost:4010/media/ad.opus" class="noscript-link" download>
                                 🎙️ <strong>Audio Description:</strong> ad.opus
                             </a>
-                            <a href="http://localhost:4010/v1/lessons/L-103/transcript" class="noscript-link" target="_blank" rel="noopener">
+                            <a href="http://localhost:4010/v1/lessons/L-103/transcript" class="noscript-link"
+                                target="_blank" rel="noopener">
                                 📄 <strong>Full Transcript:</strong> Plain-Language JSON / Text
                             </a>
                             <a href="/samples/L-103.en.brf" class="noscript-link" download>
@@ -466,86 +846,91 @@
                     </div>
                 </noscript>
 
-                <savanna-player
-                    id="lesson-player"
-                    lesson="L-103"
-                    api="http://localhost:4010"
-                    lang="en"
-                >
+                <savanna-player id="lesson-player" lesson="L-103" api="http://localhost:4010" lang="en">
                     <!-- Slotted ESL Sign Window Stub with actual ESL video from L-103 -->
                     <div slot="overlay" data-sign-window id="mock-sign-window" class="mock-sign-overlay">
                         <div id="mock-sign-title" style="font-weight: 700; margin-bottom: 3px;">ESL Sign Window</div>
-                        <video src="http://localhost:4010/media/esl-placeholder.mp4" loop muted playsinline style="width: 120px; height: 80px; object-fit: cover; border-radius: 4px; display: block;"></video>
-                        <div id="mock-sign-hint" style="font-size: 0.68rem; opacity: 0.9; margin-top: 2px;">(Press S to toggle)</div>
+                        <video src="http://localhost:4010/media/esl-placeholder.mp4" loop muted playsinline
+                            style="width: 120px; height: 80px; object-fit: cover; border-radius: 4px; display: block;"></video>
+                        <div id="mock-sign-hint" style="font-size: 0.68rem; opacity: 0.9; margin-top: 2px;">(Press S to
+                            toggle)</div>
                     </div>
                     <!-- Slotted Audio Description from L-103 -->
                     <audio data-ad id="mock-ad-track" src="http://localhost:4010/media/ad.opus" preload="none"></audio>
                 </savanna-player>
             </div>
 
-            <!-- Lesson Navigation & Lesson Switcher -->
+            <!-- Modern Bottom Lesson Navigation & Switcher -->
             <div class="lesson-nav-bar">
-                <button type="button" id="btn-before">← Previous Concept</button>
-                <div style="display: flex; gap: 0.5rem;">
-                    <button type="button" id="btn-load-l103" style="background-color: #0369a1; font-weight: 600;">★ Full Lesson (L-103)</button>
-                    <button type="button" id="btn-load-l102" style="background-color: #475569;">Minimal Lesson (L-102)</button>
+                <button type="button" id="btn-before" class="btn-nav-pill">
+                    ← Previous Concept
+                </button>
+                <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+                    <button type="button" id="btn-load-l103" class="btn-nav-pill btn-nav-primary">
+                        ★ Full Lesson (L-103)
+                    </button>
+                    <button type="button" id="btn-load-l102" class="btn-nav-pill btn-nav-secondary">
+                        Minimal Lesson (L-102)
+                    </button>
                 </div>
-                <button type="button" id="btn-after">Next Concept →</button>
+                <button type="button" id="btn-after" class="btn-nav-pill">
+                    Next Concept →
+                </button>
             </div>
 
-            <!-- Small Written Summary & Concepts -->
+            <!-- Written Summary & Concepts -->
             <section class="learning-summary" aria-labelledby="summary-heading">
-                <h3 id="summary-heading">Lesson Summary</h3>
+                <h2 class="summary-heading" id="summary-heading">Lesson Summary</h2>
                 <div class="summary-card" id="summary-card-text">
-                    The Virtual Assistant profession is evolving rapidly. As businesses adopt AI and remote-first operations, routine tasks are automated while human skills—such as client care, judgment under ambiguity, and empathetic communication—become more valuable than ever.
+                    The Virtual Assistant profession is evolving rapidly. As businesses adopt AI and remote-first
+                    operations, routine tasks are automated while human skills—such as client care, judgment under
+                    ambiguity, and empathetic communication—become more valuable than ever.
                 </div>
 
                 <ul class="key-points" id="key-points-list">
-                    <li id="kp-1"><strong>Human-in-the-loop:</strong> AI tools assist with research, drafting, and scheduling; human professionals provide trust and critical thinking.</li>
-                    <li id="kp-2"><strong>Specialization:</strong> Growing demand for specialized remote support in digital workflows, CRM management, and project coordination.</li>
-                    <li id="kp-3"><strong>Accessibility:</strong> Press <kbd>C</kbd> for captions, <kbd>S</kbd> for sign language, and <kbd>D</kbd> for Audio Description.</li>
+                    <li id="kp-1"><strong>Human-in-the-loop:</strong> AI tools assist with research, drafting, and
+                        scheduling; human professionals provide trust and critical thinking.</li>
+                    <li id="kp-2"><strong>Specialization:</strong> Growing demand for specialized remote support in
+                        digital workflows, CRM management, and project coordination.</li>
+                    <li id="kp-3"><strong>Accessibility:</strong> Press <kbd>C</kbd> for captions, <kbd>S</kbd> for sign
+                        language, and <kbd>D</kbd> for Audio Description.</li>
                 </ul>
 
-                <!-- Small Learner Notes / Reflection (Typing Safety Test) -->
+                <!-- Learner Study Notes (Typing Safety Test) -->
                 <div class="notes-box">
                     <label for="test-input" id="lbl-study-notes">Learner Study Notes:</label>
-                    <input
-                        id="test-input"
-                        type="text"
+                    <input id="test-input" type="text"
                         placeholder="Type personal study notes here (player shortcuts are safely disabled while typing)..."
-                        aria-label="Learner study notes"
-                    />
+                        aria-label="Learner study notes" />
                 </div>
             </section>
+
+            <!-- Page Footer with Language Switcher -->
+            <footer style="margin-top: 2rem; padding: 1.25rem 0; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; color: #475569; font-size: 0.85rem; flex-wrap: wrap; gap: 0.75rem;">
+                <span>Savanna Access Kit · ALX Africa</span>
+                <button type="button" id="btn-lang-toggle" class="btn-nav-pill" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1; border-radius: 9999px; font-weight: 600; font-size: 0.85rem; cursor: pointer;">
+                    🌐 አማርኛ (AM)
+                </button>
+            </footer>
         </main>
-
-        <!-- Right Sidebar: Clean Course Curriculum -->
-        <aside class="sidebar">
-            <div class="side-card">
-                <h4 id="sidebar-curriculum-heading">Module 2 Curriculum</h4>
-                <ul class="course-outline" id="curriculum-list">
-                    <li class="completed" id="curr-0"><span>2.0 Module Overview</span> <span>✓</span></li>
-                    <li class="completed" id="curr-1"><span>2.1 Evolution of Support Roles</span> <span>✓</span></li>
-                    <li class="active" id="curr-2"><span>2.2 The Future of the VA Industry</span> <span id="curr-2-status">Current</span></li>
-                    <li id="curr-3"><span>2.3 AI Tools & Prompting</span> <span id="curr-3-status">Next</span></li>
-                    <li id="curr-4"><span>2.4 Case Study & Reflection</span> <span id="curr-4-status">Upcoming</span></li>
-                    <li id="curr-5"><span>2.5 Knowledge Check</span> <span id="curr-5-status">Locked</span></li>
-                </ul>
-            </div>
-
-            <div class="side-card" style="font-size: 0.8rem; color: var(--savanna-text-muted);">
-                <h4 style="margin-bottom: 0.4rem;" id="sidebar-details-heading">Lesson Details</h4>
-                <div id="side-track">Track: <strong>VA Foundations</strong></div>
-                <div id="side-access">Accessibility: <strong>ESL, AD, Captions</strong></div>
-                <div style="margin-top: 0.5rem; font-size: 0.75rem;" id="side-hint">
-                    Press <kbd>?</kbd> anytime on the player for keyboard shortcuts help.
-                </div>
-            </div>
-        </aside>
     </div>
 
     <!-- Hidden elements kept for testing hooks without cluttering the UI -->
     <div style="display: none;" id="hidden-test-harness">
+        <span id="nav-learner-badge"></span>
+        <div id="sidebar-curriculum-heading"></div>
+        <ul id="curriculum-list">
+            <li id="curr-0"><span></span><span></span></li>
+            <li id="curr-1"><span></span><span></span></li>
+            <li id="curr-2"><span></span><span id="curr-2-status"></span></li>
+            <li id="curr-3"><span></span><span id="curr-3-status"></span></li>
+            <li id="curr-4"><span></span><span id="curr-4-status"></span></li>
+            <li id="curr-5"><span></span><span id="curr-5-status"></span></li>
+        </ul>
+        <div id="sidebar-details-heading"></div>
+        <div id="side-track"></div>
+        <div id="side-access"></div>
+        <div id="side-hint"></div>
         <div id="event-log"></div>
         <div id="state-text"></div>
         <div id="time-text"></div>

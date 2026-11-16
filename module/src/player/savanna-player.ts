@@ -21,6 +21,12 @@ import {
   type CaptionsPreferences,
   type PlayerPreferences,
 } from './preferences-manager.js';
+import {
+  resolveCaptionUrl,
+  shouldSendApiKey,
+  fetchCaptionTrack,
+  formatPackSize,
+} from './caption-loader.js';
 
 @customElement('savanna-player')
 export class SavannaPlayer extends LitElement {
@@ -57,6 +63,18 @@ export class SavannaPlayer extends LitElement {
   /** Toggle state for audio description */
   @property({ type: Boolean, attribute: 'audio-description', reflect: true })
   audioDescriptionEnabled = false;
+
+  /** Exposes the offline pack metadata from the lesson manifest (Contract C1) */
+  public get offlinePack(): { manifestUrl?: string; sizeBytes?: number } | null {
+    return this.manifestData?.pack ?? null;
+  }
+
+  /**
+   * Dynamically formatted offline pack size (e.g. "1.72 MB" or "850 KB") without hardcoding.
+   */
+  public get formattedPackSize(): string {
+    return formatPackSize(this.manifestData?.pack?.sizeBytes);
+  }
 
   /** Whether the on-screen shortcuts help dialog is open */
   @state()
@@ -111,6 +129,9 @@ export class SavannaPlayer extends LitElement {
 
   /** In-memory cache of parsed WebVTT cues mapped by language */
   private vttCuesCache = new Map<string, VttCue[]>();
+
+  /** Map of active Object URLs generated for authenticated caption tracks (lang -> blobUrl) */
+  private captionBlobUrls = new Map<string, string>();
 
   /** Playback and controls reactive state */
   @state()
@@ -170,6 +191,16 @@ export class SavannaPlayer extends LitElement {
 
   @query('.btn-captions-settings')
   private captionsSettingsBtnElement!: HTMLButtonElement | null;
+
+  @query('.btn-fullscreen')
+  private fullscreenButtonElement!: HTMLButtonElement | null;
+
+  /** FR-P1a: Tracks the last focused control in the player for fullscreen restoration */
+  private lastFocusedControl: HTMLElement | null = null;
+
+  /** FR-P12: Whether non-speech sound descriptions should be voiced to screen readers */
+  @state()
+  private soundDescriptionsEnabled = false;
 
   /** Whether the interactive transcript panel is open (SRS FR-P8) */
   @state()
@@ -858,17 +889,24 @@ export class SavannaPlayer extends LitElement {
       display: flex;
       flex-direction: column;
       width: 100%;
-      gap: 1.25rem;
+      gap: 1.5rem;
     }
 
     .player-container.with-transcript {
       display: grid;
-      grid-template-columns: minmax(0, 1.35fr) minmax(280px, 1fr);
+      grid-template-columns: minmax(0, 1.45fr) minmax(300px, 1fr);
       align-items: stretch;
-      gap: 1.25rem;
+      gap: 1.5rem;
+      max-width: 100%;
     }
 
-    @media (max-width: 768px) {
+    .player,
+    .transcript-panel {
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    @media (max-width: 900px) {
       .player-container.with-transcript {
         display: flex;
         flex-direction: column;
@@ -877,28 +915,29 @@ export class SavannaPlayer extends LitElement {
 
     /* Transcript Panel (SRS FR-P8) */
     .transcript-panel {
-      background: #0b192c;
+      background: #0f172a;
       color: #f8fafc;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: var(--savanna-radius, 6px);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 10px;
       display: flex;
       flex-direction: column;
       height: 100%;
-      min-height: 480px;
-      max-height: 600px;
+      min-height: 520px;
+      max-height: 640px;
       box-sizing: border-box;
       overflow: hidden;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
     }
 
     .transcript-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0.6rem 0.85rem;
-      background: #142742;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      background: #1e293b;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      gap: 0.6rem;
+      flex-wrap: wrap;
     }
 
     .transcript-title {
@@ -908,43 +947,82 @@ export class SavannaPlayer extends LitElement {
       color: #ffffff;
       display: flex;
       align-items: center;
-      gap: 0.45rem;
+      gap: 0.5rem;
     }
 
     .transcript-header-actions {
       display: flex;
       align-items: center;
-      gap: 0.4rem;
+      gap: 0.5rem;
+      flex-wrap: wrap;
     }
 
     .transcript-action-btn {
       min-height: 38px;
       min-width: 38px;
-      padding: 0 0.55rem;
-      background: rgba(255, 255, 255, 0.12);
+      padding: 0 0.65rem;
+      background: rgba(255, 255, 255, 0.1);
       color: #ffffff;
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      border-radius: var(--savanna-radius, 4px);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 6px;
       font-size: 0.82rem;
       font-weight: 600;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 0.35rem;
-      transition: background 0.15s ease, border-color 0.15s ease;
+      gap: 0.4rem;
+      transition: all 0.15s ease;
       box-sizing: border-box;
     }
 
     .transcript-action-btn:hover {
-      background: rgba(255, 255, 255, 0.24);
-      border-color: rgba(255, 255, 255, 0.4);
+      background: rgba(255, 255, 255, 0.22);
+      border-color: rgba(255, 255, 255, 0.45);
     }
 
     .transcript-action-btn.is-active-btn,
     .transcript-action-btn[aria-pressed='true'] {
       background: var(--savanna-accent, #0f4c81);
-      border-color: #ffffff;
+      border-color: #38bdf8;
+      box-shadow: 0 0 8px rgba(56, 189, 248, 0.35);
+    }
+
+    /* Redesigned Download Buttons (Requirement 2) */
+    .btn-braille-transcript {
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
+      color: #ffffff !important;
+      border: 1px solid rgba(255, 255, 255, 0.35) !important;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
+      font-weight: 700 !important;
+      padding: 0 0.85rem !important;
+    }
+
+    .btn-braille-transcript:hover {
+      background: linear-gradient(135deg, #0369a1 0%, #075985 100%) !important;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.6);
+      transform: translateY(-1px);
+    }
+
+    .btn-braille-badge {
+      background: rgba(255, 255, 255, 0.25);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+    }
+
+    .btn-download-transcript {
+      background: rgba(255, 255, 255, 0.14) !important;
+      color: #ffffff !important;
+      border: 1px solid rgba(255, 255, 255, 0.28) !important;
+      padding: 0 0.75rem !important;
+    }
+
+    .btn-download-transcript:hover {
+      background: rgba(255, 255, 255, 0.24) !important;
+      border-color: rgba(255, 255, 255, 0.5) !important;
+      transform: translateY(-1px);
     }
 
     .transcript-action-btn:focus-visible,
@@ -1371,6 +1449,42 @@ export class SavannaPlayer extends LitElement {
   }
 
   /**
+   * Downloads saved preferences as JSON file (FR-A4 / NFR-S3).
+   */
+  public downloadMySettings(): void {
+    try {
+      const raw = typeof localStorage !== 'undefined' ? (localStorage.getItem('savanna.prefs.v1') || '{}') : '{}';
+      const blob = new Blob([raw], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'savanna-preferences.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      this.announceStatus(this.t('player.prefDownload'), 'Export');
+    } catch {
+      // ignore
+    }
+  }
+
+  /**
+   * Clears saved preferences and resets state (FR-A4 / NFR-S3).
+   */
+  public deleteMySettings(): void {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('savanna.prefs.v1');
+      }
+      this.resetPreferences();
+      this.announceStatus(this.t('player.prefDelete'), 'Delete');
+    } catch {
+      // ignore
+    }
+  }
+
+  /**
    * Announces an update to screen readers via a persistent polite live region
    * and optionally renders a visual HUD badge for sighted users.
    */
@@ -1414,12 +1528,46 @@ export class SavannaPlayer extends LitElement {
   };
 
   private handleFullscreenChange = (): void => {
-    this.isFullscreen = !!document.fullscreenElement;
+    const isNowFullscreen = !!document.fullscreenElement;
+    if (this.isFullscreen === isNowFullscreen) {
+      return;
+    }
+    const wasFullscreen = this.isFullscreen;
+    this.isFullscreen = isNowFullscreen;
     this.announceStatus(
       this.isFullscreen ? this.t('player.statusFullscreenOn') : this.t('player.statusFullscreenOff'),
       this.isFullscreen ? 'Fullscreen ⛶' : 'Exit Fullscreen'
     );
+    // FR-P1a: Only restore focus on actual fullscreen exit/entry when focus was lost to document.body
+    if (wasFullscreen !== isNowFullscreen) {
+      const active = this.shadowRoot?.activeElement;
+      if (!active || active === this.videoElement) {
+        if (this.lastFocusedControl && this.shadowRoot?.contains(this.lastFocusedControl)) {
+          this.lastFocusedControl.focus();
+        } else if (this.fullscreenButtonElement) {
+          this.fullscreenButtonElement.focus();
+        }
+      }
+    }
   };
+
+  private handleControlFocus = (e: FocusEvent): void => {
+    const target = e.target as HTMLElement | null;
+    if (target && (target.classList?.contains('ctrl-btn') || target.tagName === 'BUTTON' || target.tagName === 'INPUT')) {
+      this.lastFocusedControl = target;
+    }
+  };
+
+  /**
+   * FR-P12: Formats cue text for screen readers. Bracketed non-speech cues
+   * (e.g. "[music]") stay out of screen-reader live speech unless sound descriptions are enabled.
+   */
+  public filterCueForScreenReader(cueText: string): string {
+    if (this.soundDescriptionsEnabled) {
+      return cueText;
+    }
+    return cueText.replace(/\[.*?\]/g, '').trim();
+  }
 
   private formatTime(seconds: number): string {
     if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
@@ -1563,6 +1711,36 @@ export class SavannaPlayer extends LitElement {
     window.removeEventListener('savanna:lang-change', this.handleLangChange);
     document.removeEventListener('fullscreenchange', this.handleFullscreenChange);
     document.removeEventListener('click', this.handleDocumentClick);
+    if (this.videoElement?.textTracks) {
+      this.videoElement.textTracks.removeEventListener('change', this.handleCaptionChange);
+    }
+    this.revokeCaptionBlobUrls();
+  }
+
+  /**
+   * Safely revokes and clears any created Object URLs for caption tracks.
+   */
+  private revokeCaptionBlobUrls(): void {
+    for (const [, blobUrl] of this.captionBlobUrls) {
+      try {
+        URL.revokeObjectURL(blobUrl);
+      } catch { }
+    }
+    this.captionBlobUrls.clear();
+  }
+
+  /**
+   * Ensures native text tracks remain in 'hidden' mode so that browser
+   * default subtitles do not collide with our custom accessible overlay.
+   */
+  private suppressNativeSubtitles(): void {
+    if (this.videoElement?.textTracks) {
+      Array.from(this.videoElement.textTracks).forEach((t) => {
+        if (t.mode === 'showing') {
+          t.mode = 'hidden';
+        }
+      });
+    }
   }
 
   protected override updated(changedProps: PropertyValues): void {
@@ -1584,17 +1762,35 @@ export class SavannaPlayer extends LitElement {
     for (const track of this.manifestCaptions) {
       if (!track.url || this.vttCuesCache.has(track.lang)) continue;
       try {
-        const res = await fetch(track.url);
-        if (res.ok) {
-          const text = await res.text();
-          const cues = parseWebVtt(text);
-          this.vttCuesCache.set(track.lang, cues);
-          if (track.lang === this.activeLang && this.transcriptLines.length === 0) {
-            this.fallbackTranscriptFromCaptions();
+        const resolvedUrl = resolveCaptionUrl({ urlPath: track.url, apiBase: this.api });
+        const requiresAuth = shouldSendApiKey(resolvedUrl, this.apiKey, this.api);
+
+        const result = await fetchCaptionTrack({
+          url: resolvedUrl,
+          apiKey: this.apiKey,
+          apiBase: this.api,
+          createBlobUrl: requiresAuth,
+        });
+
+        if (result.blobUrl) {
+          const prevBlob = this.captionBlobUrls.get(track.lang);
+          if (prevBlob) {
+            try { URL.revokeObjectURL(prevBlob); } catch { }
           }
+          this.captionBlobUrls.set(track.lang, result.blobUrl);
+          this.requestUpdate();
         }
-      } catch { }
+
+        const cues = parseWebVtt(result.text);
+        this.vttCuesCache.set(track.lang, cues);
+        if (track.lang === this.activeLang && this.transcriptLines.length === 0) {
+          this.fallbackTranscriptFromCaptions();
+        }
+      } catch (err: any) {
+        console.warn(`[savanna-player] Failed to load caption track (${track.lang}):`, err?.message || err);
+      }
     }
+    this.suppressNativeSubtitles();
   }
 
   /**
@@ -1649,7 +1845,17 @@ export class SavannaPlayer extends LitElement {
       this.src = manifest.media.video;
     }
     if (Array.isArray(manifest?.captions)) {
-      this.manifestCaptions = manifest.captions;
+      this.revokeCaptionBlobUrls();
+      this.manifestCaptions = manifest.captions.map((c: { lang: string; url: string }) => {
+        try {
+          return {
+            lang: c.lang,
+            url: resolveCaptionUrl({ urlPath: c.url, apiBase: this.api }),
+          };
+        } catch {
+          return c;
+        }
+      });
       this.loadVttCues();
     }
 
@@ -2038,14 +2244,18 @@ export class SavannaPlayer extends LitElement {
   private handlePrefsDialogClose = (): void => {
     this.showPreferencesDialog = false;
     this.showCaptionsDialog = false;
-    if (this.triggerElementBeforeDialog) {
-      this.triggerElementBeforeDialog.focus();
-      this.triggerElementBeforeDialog = null;
-    } else if (this.prefsBtnElement) {
-      this.prefsBtnElement.focus();
-    } else if (this.captionsSettingsBtnElement) {
-      this.captionsSettingsBtnElement.focus();
+    const dialog = this.prefsDialogElement || this.captionsDialogElement;
+    const active = this.shadowRoot?.activeElement;
+    if (!active || active === dialog || dialog?.contains(active)) {
+      if (this.triggerElementBeforeDialog) {
+        this.triggerElementBeforeDialog.focus();
+      } else if (this.prefsBtnElement) {
+        this.prefsBtnElement.focus();
+      } else if (this.captionsSettingsBtnElement) {
+        this.captionsSettingsBtnElement.focus();
+      }
     }
+    this.triggerElementBeforeDialog = null;
   };
 
   private handlePrefsDialogClick = (event: MouseEvent): void => {
@@ -2136,6 +2346,11 @@ export class SavannaPlayer extends LitElement {
     if (!Number.isNaN(size)) {
       this.captionFontSize = size;
       this.saveCaptionsPreferences();
+      // FR-P3a: Polite live region announcement in active language
+      const msg = this.activeLang === 'am'
+        ? `የግርጌ ጽሑፍ መጠን ${size} በመቶ`
+        : `Caption size ${size} percent`;
+      this.announceStatus(msg);
     }
   };
 
@@ -2153,6 +2368,16 @@ export class SavannaPlayer extends LitElement {
       this.captionBgColor = '#ffffff';
     }
     this.saveCaptionsPreferences();
+    // FR-P3a: Polite announcement of caption style change
+    const presetName = preset === 'yellow-black'
+      ? (this.activeLang === 'am' ? 'ቢጫ በጥቁር ላይ' : 'Yellow on black')
+      : preset === 'white-black'
+        ? (this.activeLang === 'am' ? 'ነጭ በጥቁር ላይ' : 'White on black')
+        : (this.activeLang === 'am' ? 'ጥቁር በነጭ ላይ' : 'Black on white');
+    const msg = this.activeLang === 'am'
+      ? `የግርጌ ጽሑፍ ገጽታ ${presetName}`
+      : `Caption style ${presetName}`;
+    this.announceStatus(msg);
   };
 
   private handleCaptionTextColorChange = (e: Event): void => {
@@ -2291,13 +2516,16 @@ export class SavannaPlayer extends LitElement {
 
   private handleDialogClose = (): void => {
     this.showHelpDialog = false;
-    // Restore focus to trigger element
-    if (this.triggerElementBeforeDialog) {
-      this.triggerElementBeforeDialog.focus();
-      this.triggerElementBeforeDialog = null;
-    } else if (this.helpButtonElement) {
-      this.helpButtonElement.focus();
+    // Restore focus to trigger element only if focus is still on/inside the dialog or lost
+    const active = this.shadowRoot?.activeElement;
+    if (!active || active === this.helpDialogElement || this.helpDialogElement?.contains(active)) {
+      if (this.triggerElementBeforeDialog) {
+        this.triggerElementBeforeDialog.focus();
+      } else if (this.helpButtonElement) {
+        this.helpButtonElement.focus();
+      }
     }
+    this.triggerElementBeforeDialog = null;
   };
 
   private handleDialogClick = (event: MouseEvent): void => {
@@ -2416,7 +2644,12 @@ export class SavannaPlayer extends LitElement {
   private handleCaptionChange = (): void => {
     if (this.videoElement?.textTracks) {
       const tracks = Array.from(this.videoElement.textTracks);
-      this.captionsShowing = tracks.some((t) => t.mode === 'showing');
+      tracks.forEach((t) => {
+        if (t.mode === 'showing') {
+          t.mode = 'hidden';
+          this.captionsShowing = true;
+        }
+      });
     }
     this.emitEvent('savanna:caption-change');
   };
@@ -2469,24 +2702,43 @@ export class SavannaPlayer extends LitElement {
    * Fetches transcript from the API endpoint per Contract C1 or falls back to VTT cues.
    */
   private async fetchTranscript(url: string, manifest?: any): Promise<void> {
-    const fullUrl = url.startsWith('http')
-      ? url
-      : `${this.api.replace(/\/$/, '')}${url.startsWith('/') ? '' : '/'}${url}?lang=${this.activeLang}`;
+    let targetUrl: string;
+    try {
+      targetUrl = resolveCaptionUrl({ urlPath: url, apiBase: this.api });
+      const parsed = new URL(targetUrl);
+      parsed.searchParams.set('lang', this.activeLang);
+      targetUrl = parsed.href;
+    } catch {
+      targetUrl = url;
+    }
+
     try {
       const headers: Record<string, string> = {};
-      if (this.apiKey) {
+      if (this.apiKey && shouldSendApiKey(targetUrl, this.apiKey, this.api)) {
         headers['X-Savanna-Key'] = this.apiKey;
       }
-      const res = await fetch(fullUrl, { headers });
+      const res = await fetch(targetUrl, { headers });
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data?.lines) && data.lines.length > 0) {
-          const vttCues = this.vttCuesCache.get(this.activeLang);
-          if (vttCues && vttCues.length > data.lines.length) {
-            this.transcriptLines = vttCues.map((c) => ({ start: c.start, end: c.end, text: c.text }));
-          } else {
-            this.transcriptLines = data.lines;
+          const matchingVtt = this.vttCuesCache.get(this.activeLang);
+
+          // If the API returned a different language than requested, prefer authentic VTT cues
+          if (data.lang && data.lang !== this.activeLang && matchingVtt && matchingVtt.length > 0) {
+            this.transcriptLines = matchingVtt.map((c) => ({ start: c.start, end: c.end, text: c.text }));
+            this.resolveSummary(manifest);
+            return;
           }
+
+          // If VTT cues have more complete coverage than a partial API transcript, prefer VTT cues
+          if (matchingVtt && matchingVtt.length > data.lines.length) {
+            this.transcriptLines = matchingVtt.map((c) => ({ start: c.start, end: c.end, text: c.text }));
+            this.resolveSummary(manifest);
+            return;
+          }
+
+          // Otherwise use data.lines
+          this.transcriptLines = data.lines;
           this.resolveSummary(manifest);
           return;
         }
@@ -2506,10 +2758,14 @@ export class SavannaPlayer extends LitElement {
     } else {
       const track = this.manifestCaptions.find((c) => c.lang === this.activeLang) || this.manifestCaptions[0];
       if (track?.url) {
-        fetch(track.url)
-          .then((r) => r.text())
-          .then((txt) => {
-            const parsed = parseWebVtt(txt);
+        const resolvedUrl = resolveCaptionUrl({ urlPath: track.url, apiBase: this.api });
+        fetchCaptionTrack({
+          url: resolvedUrl,
+          apiKey: this.apiKey,
+          apiBase: this.api,
+        })
+          .then((res) => {
+            const parsed = parseWebVtt(res.text);
             this.vttCuesCache.set(track.lang, parsed);
             this.transcriptLines = parsed.map((c) => ({ start: c.start, end: c.end, text: c.text }));
           })
@@ -2728,7 +2984,9 @@ export class SavannaPlayer extends LitElement {
               aria-label=${this.t('player.transcriptAutoScroll')}
               title=${this.t('player.transcriptAutoScroll')}
             >
-              🔄
+              <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+              </svg>
             </button>
 
             <!-- Download Transcript Button (SRS FR-P8) -->
@@ -2739,7 +2997,12 @@ export class SavannaPlayer extends LitElement {
               aria-label=${this.t('player.transcriptDownload')}
               title=${this.t('player.transcriptDownload')}
             >
-              📥 ${this.t('player.transcriptDownload')}
+              <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>${this.t('player.transcriptDownload')}</span>
             </button>
 
             <!-- Download Braille (.brf) Button (SRS FR-S1, Task 1.8) -->
@@ -2750,7 +3013,13 @@ export class SavannaPlayer extends LitElement {
               aria-label=${this.t('player.transcriptDownloadBraille')}
               title=${this.t('player.transcriptDownloadBraille')}
             >
-              ⠃⠗ ${this.t('player.transcriptDownloadBraille')}
+              <span class="btn-braille-badge" aria-hidden="true">⠃⠗</span>
+              <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>${this.t('player.transcriptDownloadBraille')}</span>
             </button>
 
             <!-- Close Panel Button -->
@@ -2761,7 +3030,10 @@ export class SavannaPlayer extends LitElement {
               aria-label="${this.t('player.transcriptClose')} ✕"
               title="${this.t('player.transcriptClose')} (Esc)"
             >
-              ✕
+              <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
             </button>
           </div>
         </div>
@@ -2871,7 +3143,7 @@ export class SavannaPlayer extends LitElement {
               <track
                 kind="subtitles"
                 srclang=${c.lang}
-                src=${c.url}
+                src=${this.captionBlobUrls.get(c.lang) || c.url}
                 label=${c.lang === 'am' ? 'Amharic' : 'English'}
                 ?default=${c.lang === this.lang}
               />
@@ -2902,17 +3174,26 @@ export class SavannaPlayer extends LitElement {
           class="player-controls"
           aria-label=${this.t('player.controlsLabel')}
           lang=${this.activeLang}
+          @focusin=${this.handleControlFocus}
         >
           <!-- Play / Pause (Toggle) -->
           <button
             type="button"
             class="ctrl-btn btn-play"
             @click=${this.togglePlay}
-            aria-label=${this.t('player.play')}
+            aria-label=${this.isPlaying ? this.t('player.pause') : this.t('player.play')}
             aria-pressed=${this.isPlaying ? 'true' : 'false'}
-            title="${this.t('player.play')} (K)"
+            title="${this.isPlaying ? this.t('player.pause') : this.t('player.play')} (K)"
           >
-            ${this.isPlaying ? '⏸' : '▶'}
+            ${this.isPlaying
+              ? html`<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="6" y="4" width="4" height="16" rx="1"></rect>
+                  <rect x="14" y="4" width="4" height="16" rx="1"></rect>
+                </svg>`
+              : html`<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>`
+            }
           </button>
 
           <!-- Rewind 10s (Action) -->
@@ -2938,7 +3219,7 @@ export class SavannaPlayer extends LitElement {
               <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
               <polyline points="3 3 3 8 8 8"></polyline>
             </svg>
-            10s
+            <span style="font-size: 0.8rem; font-weight: 700;">10s</span>
           </button>
 
           <!-- Position Slider -->
@@ -2968,7 +3249,17 @@ export class SavannaPlayer extends LitElement {
             aria-pressed=${this.isMuted || (this.media ? this.media.muted : false) ? 'true' : 'false'}
             title="${this.t('player.mute')} (M)"
           >
-            ${this.isMuted || this.volume === 0 ? '🔇' : '🔊'}
+            ${this.isMuted || this.volume === 0
+              ? html`<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor"></polygon>
+                  <line x1="23" y1="9" x2="17" y2="15"></line>
+                  <line x1="17" y1="9" x2="23" y2="15"></line>
+                </svg>`
+              : html`<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor"></polygon>
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                </svg>`
+            }
           </button>
 
           <!-- Volume Slider -->
@@ -2992,10 +3283,10 @@ export class SavannaPlayer extends LitElement {
               @click=${this.toggleSpeedMenu}
               aria-haspopup="menu"
               aria-expanded=${this.isSpeedMenuOpen ? 'true' : 'false'}
-              aria-label="${this.t('player.speed')}: ${this.playbackRate}x"
+              aria-label="${this.t('player.speed')}: ${this.playbackRate === 1 ? '1.0x' : this.playbackRate + 'x'}"
               title="${this.t('player.speed')}"
             >
-              ${this.playbackRate === 1 ? '1x' : this.playbackRate + 'x'}
+              ${this.playbackRate === 1 ? '1.0x' : this.playbackRate + 'x'}
             </button>
             ${this.isSpeedMenuOpen
         ? html`
@@ -3031,21 +3322,26 @@ export class SavannaPlayer extends LitElement {
             aria-pressed=${this.captionsShowing ? 'true' : 'false'}
             aria-expanded=${this.captionsShowing ? 'true' : 'false'}
             title="${this.t('player.captions')} (C)"
+            style="position: relative;"
           >
-            CC
+            <span style="font-weight: 800; font-size: 0.85rem; border: 1.5px solid currentColor; border-radius: 3px; padding: 1px 4px; line-height: 1;">CC</span>
+            ${this.captionsShowing ? html`<span style="position: absolute; bottom: 4px; left: 10px; right: 10px; height: 2px; background: #e11d48; border-radius: 1px;"></span>` : ''}
           </button>
 
-          <!-- Preferences Settings Dialog Trigger (SRS FR-P3, FR-P9, Contract C3/C4) -->
+          <!-- Preferences / Caption Settings Dialog Trigger (SRS FR-P3, FR-P3a, Contract C3/C4) -->
           <button
             type="button"
             class="ctrl-btn btn-preferences btn-captions-settings ${this.showPreferencesDialog ? 'active' : ''}"
             @click=${() => this.togglePreferences('general')}
-            aria-label=${this.t('player.preferences')}
+            aria-label=${this.t('player.captionsSettings')}
             aria-haspopup="dialog"
             aria-expanded=${this.showPreferencesDialog ? 'true' : 'false'}
-            title="${this.t('player.preferences')} (P)"
+            title="${this.t('player.captionsSettings')} (P)"
           >
-            ⚙️
+            <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
           </button>
 
           <!-- Interactive Transcript Toggle Button (SRS FR-P8) -->
@@ -3059,24 +3355,12 @@ export class SavannaPlayer extends LitElement {
             aria-pressed=${this.isTranscriptOpen ? 'true' : 'false'}
             title="${this.t('player.transcript')} (T)"
           >
-            <svg
-              aria-hidden="true"
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              style="margin-right: 3px;"
-            >
+            <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
               <polyline points="14 2 14 8 20 8"></polyline>
               <line x1="16" y1="13" x2="8" y2="13"></line>
               <line x1="16" y1="17" x2="8" y2="17"></line>
             </svg>
-            📝
           </button>
 
           <!-- Sign Language Window Toggle (Step 6 Null-Safe) -->
@@ -3085,14 +3369,14 @@ export class SavannaPlayer extends LitElement {
             class="ctrl-btn btn-sign ${!this.hasSignTrack ? 'is-disabled' : ''} ${this.hasSignTrack && this.showSignWindow ? 'active' : ''}"
             @click=${this.toggleSignWindow}
             aria-label=${this.hasSignTrack
-        ? this.t('player.sign')
-        : `${this.t('player.sign')} ${this.t('player.notAvailableSuffix')}`.trim()}
+        ? `${this.t('player.sign')} ESL`
+        : `${this.t('player.sign')} ESL ${this.t('player.notAvailableSuffix')}`.trim()}
             aria-disabled=${!this.hasSignTrack ? 'true' : 'false'}
             aria-expanded=${this.hasSignTrack && this.showSignWindow ? 'true' : 'false'}
             aria-pressed=${this.hasSignTrack && this.showSignWindow ? 'true' : 'false'}
             title="${this.t('player.sign')} (S)${!this.hasSignTrack ? ' ' + this.t('player.notAvailableSuffix') : ''}"
           >
-            🤟
+            <span style="font-weight: 800; font-size: 0.8rem; border: 1.5px solid currentColor; border-radius: 4px; padding: 1px 4px; line-height: 1;">ESL</span>
           </button>
 
           <!-- Audio Description Toggle (Step 6 Null-Safe) -->
@@ -3108,7 +3392,7 @@ export class SavannaPlayer extends LitElement {
             aria-pressed=${this.hasAdTrack && this.audioDescriptionEnabled ? 'true' : 'false'}
             title="${this.t('player.audioDescription')} (D)${!this.hasAdTrack ? ' ' + this.t('player.notAvailableSuffix') : ''}"
           >
-            AD
+            <span style="font-weight: 800; font-size: 0.8rem; border: 1.5px solid currentColor; border-radius: 4px; padding: 1px 4px; line-height: 1;">AD</span>
           </button>
 
           <!-- Fullscreen Toggle -->
@@ -3120,7 +3404,14 @@ export class SavannaPlayer extends LitElement {
             aria-pressed=${this.isFullscreen ? 'true' : 'false'}
             title="${this.t('player.fullscreen')} (F)"
           >
-            ⛶
+            ${this.isFullscreen
+              ? html`<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
+                </svg>`
+              : html`<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+                </svg>`
+            }
           </button>
 
           <!-- Keyboard Shortcuts Help (Step 7) -->
@@ -3133,7 +3424,11 @@ export class SavannaPlayer extends LitElement {
             aria-expanded=${this.showHelpDialog ? 'true' : 'false'}
             title="${this.t('player.help')} (?)"
           >
-            ?
+            <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
           </button>
         </div>
 
@@ -3389,8 +3684,8 @@ export class SavannaPlayer extends LitElement {
               </select>
             </div>
 
-            <!-- Reset to Defaults Button -->
-            <div class="setting-row" style="margin-top: 1rem;">
+            <!-- Reset, Download, Delete Buttons (FR-A4) -->
+            <div class="setting-row" style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 0.5rem;">
               <button
                 type="button"
                 class="btn-reset-prefs"
@@ -3398,6 +3693,22 @@ export class SavannaPlayer extends LitElement {
                 aria-label=${this.t('player.prefReset')}
               >
                 🔄 ${this.t('player.prefReset')}
+              </button>
+              <button
+                type="button"
+                class="btn-reset-prefs"
+                @click=${this.downloadMySettings}
+                aria-label=${this.t('player.prefDownload')}
+              >
+                💾 ${this.t('player.prefDownload')}
+              </button>
+              <button
+                type="button"
+                class="btn-reset-prefs"
+                @click=${this.deleteMySettings}
+                aria-label=${this.t('player.prefDelete')}
+              >
+                🗑️ ${this.t('player.prefDelete')}
               </button>
             </div>
           </div>

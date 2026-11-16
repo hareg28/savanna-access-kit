@@ -51,7 +51,7 @@ export async function createApp(opts: AppOptions = {}) {
   // OpenAPI 3.1 spec (assembled from every route file) and Swagger UI. Both are public.
   const spec = buildOpenApi(modules);
   app.locals.openapi = spec;
-  app.get("/v1/openapi.json", (_req, res) => void res.json(spec));
+  app.get(["/v1/openapi.json", "/api/v1/openapi.json"], (_req, res) => void res.json(spec));
   const swaggerDist = createRequire(import.meta.url)("swagger-ui-dist").getAbsoluteFSPath() as string;
   app.use("/docs/assets", express.static(swaggerDist, { index: false }));
   app.get("/docs/init.js", (_req, res) =>
@@ -66,7 +66,7 @@ export async function createApp(opts: AppOptions = {}) {
     ),
   );
 
-  // Public modules first (full paths, no auth), then key-protected modules under /v1.
+  // Public modules first (full paths, no auth), then key-protected modules under /v1 and /api/v1 (FR-N3).
   for (const { mod } of modules.filter((m) => m.mod.access === "public")) {
     const router = Router();
     mod.register(router, ctx);
@@ -77,6 +77,7 @@ export async function createApp(opts: AppOptions = {}) {
     mod.register(v1, ctx);
   }
   app.use("/v1", authenticate(config), v1);
+  app.use("/api/v1", authenticate(config), v1);
 
   app.use(notFound);
   app.use(errorHandler);

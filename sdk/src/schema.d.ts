@@ -47,7 +47,7 @@ export interface paths {
         };
         /**
          * Get a lesson manifest
-         * @description Everything a player needs: media, English and Amharic captions, sign video, audio description, transcript and offline pack. Fields that do not exist for a lesson are null.
+         * @description Everything a player needs: media, English and Amharic captions, sign video, audio description, transcript and offline pack. Fields that do not exist for a lesson are null. Alias: /api/v1/lessons/{id}
          */
         get: operations["getV1LessonsId"];
         put?: never;
@@ -67,7 +67,7 @@ export interface paths {
         };
         /**
          * Get a caption file
-         * @description Redirects to the WebVTT file for the requested language.
+         * @description Redirects to or serves the WebVTT file for the requested language.
          */
         get: operations["getV1LessonsIdCaptionsFile"];
         put?: never;
@@ -85,10 +85,33 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get a lesson transcript */
+        /**
+         * Get a lesson transcript
+         * @description Timed transcript lines. Alias: /api/v1/lessons/{id}/transcript
+         */
         get: operations["getV1LessonsIdTranscript"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/lessons/{id}/captions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload and review corrected captions
+         * @description Accepts and validates a WebVTT file for one language (2 lines max, ~32 chars/line, 1-7s duration, valid timestamps). Sets reviewed=true on success. Alias: /api/v1/lessons/{id}/captions
+         */
+        post: operations["postV1LessonsIdCaptions"];
         delete?: never;
         options?: never;
         head?: never;
@@ -325,6 +348,30 @@ export interface paths {
          * @description Replaces the whole object. Each owner writes only their own namespace (contract C3).
          */
         put: operations["putV1Preferences"];
+        post?: never;
+        /**
+         * Delete a user's preferences (FR-A4 / NFR-S3)
+         * @description Permanently clears all stored preferences for the user. Alias: /api/v1/preferences
+         */
+        delete: operations["deleteV1Preferences"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/preferences/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export a user's preferences (FR-A4 / NFR-S3)
+         * @description Exports all stored preferences for the user. Alias: /api/v1/preferences/export
+         */
+        get: operations["getV1PreferencesExport"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -712,6 +759,87 @@ export interface operations {
                 };
             };
             /** @description No transcript in that language. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Too many requests. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    postV1LessonsIdCaptions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Lesson id, e.g. L-102 */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    lang: "en" | "am";
+                    /** @description WebVTT caption content */
+                    vtt: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Caption accepted and approved. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        status: "ok";
+                        lessonId: string;
+                        /** @enum {string} */
+                        lang: "en" | "am";
+                        /** @constant */
+                        reviewed: true;
+                        cueCount: number;
+                        url: string;
+                    };
+                };
+            };
+            /** @description Validation error with cue number and message (RFC 9457). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Missing or invalid X-Savanna-Key. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Requires secret key. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unknown lesson. */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -1680,6 +1808,151 @@ export interface operations {
                         };
                         jobs?: {
                             [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+            /** @description The request did not match the expected shape. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing or invalid X-Savanna-Key. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description This key is not allowed from this origin. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Too many requests. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    deleteV1Preferences: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Opaque per-user id (16+ characters) issued by the host platform. Treat it like a password; only its hash is stored. */
+                "X-Savanna-User": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Confirmation of deletion. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        status: "deleted";
+                        message: string;
+                    };
+                };
+            };
+            /** @description The request did not match the expected shape. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Missing or invalid X-Savanna-Key. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description This key is not allowed from this origin. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Too many requests. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getV1PreferencesExport: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Opaque per-user id (16+ characters) issued by the host platform. Treat it like a password; only its hash is stored. */
+                "X-Savanna-User": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Exported preferences file. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        exportedAt: string;
+                        userHash: string;
+                        preferences: {
+                            ui?: {
+                                [key: string]: unknown;
+                            };
+                            captions?: {
+                                [key: string]: unknown;
+                            };
+                            sign?: {
+                                [key: string]: unknown;
+                            };
+                            ad?: {
+                                [key: string]: unknown;
+                            };
+                            offline?: {
+                                [key: string]: unknown;
+                            };
+                            jobs?: {
+                                [key: string]: unknown;
+                            };
                         };
                     };
                 };

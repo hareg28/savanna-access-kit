@@ -4,7 +4,7 @@ import type { AppConfig, Partner } from "./lib/context";
 const DEV_PARTNER: Partner = {
   name: "dev",
   key: "pk_dev_local",
-  origins: ["http://localhost:3000", "http://localhost:4010", "http://localhost:5173"],
+  origins: ["http://localhost:3000", "http://localhost:4010", "http://localhost:5173", "http://localhost:8000", "http://localhost:8080"],
 };
 
 const PartnerSchema = z.object({

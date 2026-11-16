@@ -41,6 +41,18 @@ export async function createPrismaStore(databaseUrl: string): Promise<{ store: S
     async setPreferences(userHash, prefs) {
       await prisma.preference.upsert({ where: { userHash }, create: { userHash, data: prefs }, update: { data: prefs } });
     },
+    async deletePreferences(userHash) {
+      await prisma.preference.deleteMany({ where: { userHash } });
+    },
+    async saveCaption(lessonId, lang, vttContent, reviewed = true) {
+      const url = `/v1/lessons/${lessonId}/captions/${lang}.vtt`;
+      await prisma.asset.upsert({
+        where: { lessonId_kind_lang: { lessonId, kind: "vtt", lang } },
+        create: { lessonId, kind: "vtt", lang, url, bytes: Buffer.byteLength(vttContent), checksum: "", reviewed },
+        update: { url, bytes: Buffer.byteLength(vttContent), reviewed },
+      });
+      return { url, reviewed };
+    },
   };
   return { store, prisma };
 }

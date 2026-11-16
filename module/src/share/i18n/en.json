@@ -1,0 +1,8 @@
+{
+  "share.button": "Share this lesson",
+  "share.size": "({size} MB)",
+  "share.notAvailable": "Not available for this lesson yet",
+  "share.downloading": "Preparing lesson file...",
+  "share.ready": "Lesson file ready, {size} MB",
+  "share.error": "Could not download lesson file"
+}

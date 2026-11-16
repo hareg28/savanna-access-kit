@@ -1,6 +1,7 @@
 import type { AssetKind, AssetRecord, LessonRecord } from "../db/store";
 import { HttpError } from "./errors";
 import type { LessonManifest } from "../schemas/lesson";
+import { accessSummary } from "../services/accessSummary";
 
 const LANG_ORDER = ["en", "am"];
 
@@ -34,6 +35,8 @@ export function toManifest(rec: LessonRecord): LessonManifest {
         : null,
     transcript: { url: `/v1/lessons/${rec.id}/transcript` },
     pack: pack ? { manifestUrl: `/v1/lessons/${rec.id}/pack`, sizeBytes: pack.bytes } : null,
+    access: accessSummary(rec),
+    share: { url: `/v1/lessons/${rec.id}/share.html`, sizeBytes: pack ? pack.bytes : 1800000 },
   };
 }
 
@@ -43,12 +46,19 @@ export function fromManifest(m: LessonManifest): LessonRecord {
     kind, lang: null, url, bytes: 0, checksum: "", reviewed: true, meta: null, ...extra,
   });
   const assets: AssetRecord[] = [asset("video", m.media.video), asset("audio", m.media.audio)];
-  for (const c of m.captions) assets.push(asset("vtt", c.url, { lang: c.lang }));
+  for (const c of m.captions) {
+    const status = m.access?.captions?.find((ac) => ac.lang === c.lang)?.status;
+    const reviewed = status ? status === "reviewed" : true;
+    assets.push(asset("vtt", c.url, { lang: c.lang, reviewed }));
+  }
   if (m.sign) assets.push(asset("sign", m.sign.url, { meta: { offsetMs: m.sign.offsetMs } }));
   if (m.audioDescription) {
     assets.push(asset("ad_audio", m.audioDescription.audioUrl, { meta: { extended: m.audioDescription.extended } }));
     assets.push(asset("ad_vtt", m.audioDescription.vttUrl, { lang: "en" }));
   }
   if (m.pack) assets.push(asset("pack", m.pack.manifestUrl, { bytes: m.pack.sizeBytes }));
+  if (m.access?.summary) {
+    assets.push(asset("transcript_html", `/v1/lessons/${m.id}/transcript`, { meta: { summary: true } }));
+  }
   return { id: m.id, title: m.title, durationSec: m.durationSec, assets };
 }

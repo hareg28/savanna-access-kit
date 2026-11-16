@@ -161,7 +161,7 @@
       "get": {
         "operationId": "getV1LessonsId",
         "summary": "Get a lesson manifest",
-        "description": "Everything a player needs: media, English and Amharic captions, sign video, audio description, transcript and offline pack. Fields that do not exist for a lesson are null.",
+        "description": "Everything a player needs: media, English and Amharic captions, sign video, audio description, transcript and offline pack. Fields that do not exist for a lesson are null. Alias: /api/v1/lessons/{id}",
         "tags": [
           "Lessons"
         ],
@@ -347,6 +347,125 @@
                           "type": "null"
                         }
                       ]
+                    },
+                    "access": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "captions": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "lang": {
+                                    "type": "string",
+                                    "enum": [
+                                      "en",
+                                      "am"
+                                    ]
+                                  },
+                                  "status": {
+                                    "type": "string",
+                                    "enum": [
+                                      "reviewed",
+                                      "draft"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "lang",
+                                  "status"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "sign": {
+                              "type": "boolean"
+                            },
+                            "audioDescription": {
+                              "type": "object",
+                              "properties": {
+                                "recorded": {
+                                  "type": "boolean"
+                                },
+                                "text": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "recorded",
+                                "text"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "offline": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "sizeBytes": {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "maximum": 9007199254740991
+                                    }
+                                  },
+                                  "required": [
+                                    "sizeBytes"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "transcript": {
+                              "type": "boolean"
+                            },
+                            "summary": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "captions",
+                            "sign",
+                            "audioDescription",
+                            "offline",
+                            "transcript",
+                            "summary"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "share": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "url": {
+                              "type": "string"
+                            },
+                            "sizeBytes": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "url",
+                            "sizeBytes"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   },
                   "required": [
@@ -410,7 +529,7 @@
       "get": {
         "operationId": "getV1LessonsIdCaptionsFile",
         "summary": "Get a caption file",
-        "description": "Redirects to the WebVTT file for the requested language.",
+        "description": "Redirects to or serves the WebVTT file for the requested language.",
         "tags": [
           "Lessons"
         ],
@@ -495,6 +614,7 @@
       "get": {
         "operationId": "getV1LessonsIdTranscript",
         "summary": "Get a lesson transcript",
+        "description": "Timed transcript lines. Alias: /api/v1/lessons/{id}/transcript",
         "tags": [
           "Lessons"
         ],
@@ -609,6 +729,136 @@
           },
           "404": {
             "description": "No transcript in that language."
+          },
+          "429": {
+            "description": "Too many requests.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKey": []
+          }
+        ]
+      }
+    },
+    "/v1/lessons/{id}/captions": {
+      "post": {
+        "operationId": "postV1LessonsIdCaptions",
+        "summary": "Upload and review corrected captions",
+        "description": "Accepts and validates a WebVTT file for one language (2 lines max, ~32 chars/line, 1-7s duration, valid timestamps). Sets reviewed=true on success. Alias: /api/v1/lessons/{id}/captions",
+        "tags": [
+          "Lessons"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Lesson id, e.g. L-102",
+            "schema": {
+              "type": "string",
+              "description": "Lesson id, e.g. L-102"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "lang": {
+                    "type": "string",
+                    "enum": [
+                      "en",
+                      "am"
+                    ]
+                  },
+                  "vtt": {
+                    "type": "string",
+                    "description": "WebVTT caption content"
+                  }
+                },
+                "required": [
+                  "lang",
+                  "vtt"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Caption accepted and approved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "const": "ok"
+                    },
+                    "lessonId": {
+                      "type": "string"
+                    },
+                    "lang": {
+                      "type": "string",
+                      "enum": [
+                        "en",
+                        "am"
+                      ]
+                    },
+                    "reviewed": {
+                      "type": "boolean",
+                      "const": true
+                    },
+                    "cueCount": {
+                      "type": "number"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "lessonId",
+                    "lang",
+                    "reviewed",
+                    "cueCount",
+                    "url"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error with cue number and message (RFC 9457)."
+          },
+          "401": {
+            "description": "Missing or invalid X-Savanna-Key.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Requires secret key."
+          },
+          "404": {
+            "description": "Unknown lesson."
           },
           "429": {
             "description": "Too many requests.",
@@ -2594,6 +2844,324 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Too many requests.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKey": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "deleteV1Preferences",
+        "summary": "Delete a user's preferences (FR-A4 / NFR-S3)",
+        "description": "Permanently clears all stored preferences for the user. Alias: /api/v1/preferences",
+        "tags": [
+          "Preferences"
+        ],
+        "parameters": [
+          {
+            "name": "X-Savanna-User",
+            "in": "header",
+            "required": true,
+            "description": "Opaque per-user id (16+ characters) issued by the host platform. Treat it like a password; only its hash is stored.",
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 200,
+              "description": "Opaque per-user id (16+ characters) issued by the host platform. Treat it like a password; only its hash is stored."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Confirmation of deletion.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "const": "deleted"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request did not match the expected shape.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid X-Savanna-Key.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "This key is not allowed from this origin.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKey": []
+          }
+        ]
+      }
+    },
+    "/v1/preferences/export": {
+      "get": {
+        "operationId": "getV1PreferencesExport",
+        "summary": "Export a user's preferences (FR-A4 / NFR-S3)",
+        "description": "Exports all stored preferences for the user. Alias: /api/v1/preferences/export",
+        "tags": [
+          "Preferences"
+        ],
+        "parameters": [
+          {
+            "name": "X-Savanna-User",
+            "in": "header",
+            "required": true,
+            "description": "Opaque per-user id (16+ characters) issued by the host platform. Treat it like a password; only its hash is stored.",
+            "schema": {
+              "type": "string",
+              "minLength": 16,
+              "maxLength": 200,
+              "description": "Opaque per-user id (16+ characters) issued by the host platform. Treat it like a password; only its hash is stored."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Exported preferences file.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "exportedAt": {
+                      "type": "string"
+                    },
+                    "userHash": {
+                      "type": "string"
+                    },
+                    "preferences": {
+                      "type": "object",
+                      "properties": {
+                        "ui": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {}
+                        },
+                        "captions": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {}
+                        },
+                        "sign": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {}
+                        },
+                        "ad": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {}
+                        },
+                        "offline": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {}
+                        },
+                        "jobs": {
+                          "type": "object",
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "additionalProperties": {}
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "exportedAt",
+                    "userHash",
+                    "preferences"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request did not match the expected shape.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid X-Savanna-Key.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "This key is not allowed from this origin.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKey": []
+          }
+        ]
+      }
+    },
+    "/v1/lessons/{id}/share.html": {
+      "get": {
+        "operationId": "getV1LessonsIdShareHtml",
+        "summary": "Download standalone lesson in a file (Feature C)",
+        "description": "Returns a single offline self-contained HTML file containing embedded Opus audio, dual-language captions, interactive transcript, and summary. No internet required once downloaded.",
+        "tags": [
+          "Lessons"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Lesson id, e.g. L-102",
+            "schema": {
+              "type": "string",
+              "description": "Lesson id, e.g. L-102"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Standalone lesson HTML file.",
+            "headers": {
+              "Content-Disposition": {
+                "description": "Attachment header e.g. attachment; filename=\"lesson-L-102.html\"",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "description": "SHA-256 checksum ETag of content",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Lesson has no audio available."
+          },
+          "401": {
+            "description": "Missing or invalid X-Savanna-Key.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "This key is not allowed from this origin.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown lesson."
           },
           "429": {
             "description": "Too many requests.",

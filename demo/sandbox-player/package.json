@@ -4,10 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --port 5173 --strictPort",
-    "build": "vite build"
+    "dev": "vite --port 5174 --strictPort",
+    "build": "vite build",
+    "test": "npx playwright test"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.1",
+    "@playwright/test": "^1.49.1",
     "vite": "^6.0.0"
   }
 }

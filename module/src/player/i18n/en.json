@@ -117,6 +117,8 @@
   "player.prefEnabled": "Enabled",
   "player.prefDisabled": "Disabled",
   "player.prefReset": "Reset to Defaults",
+  "player.prefDownload": "Download my settings",
+  "player.prefDelete": "Delete my settings",
   "player.statusPrefsSaved": "Preferences saved",
   "player.statusLangChanged": "Language changed to {lang}"
 }

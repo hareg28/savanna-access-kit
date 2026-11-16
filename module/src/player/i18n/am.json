@@ -118,6 +118,8 @@
   "player.prefEnabled": "የነቃ",
   "player.prefDisabled": "የቦዘነ",
   "player.prefReset": "ወደ ነባሪ መልስ",
+  "player.prefDownload": "የእኔን ምርጫዎች አውርድ",
+  "player.prefDelete": "የእኔን ምርጫዎች ሰርዝ",
   "player.statusPrefsSaved": "ቅንብሮች ተቀምጠዋል",
   "player.statusLangChanged": "ቋንቋ ወደ {lang} ተቀይሯል"
 }

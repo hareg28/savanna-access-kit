@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Savanna WebVTT Caption Editor | የአማርኛ እና እንግሊዝኛ መግለጫ አርታዒ</title>
+  <style>
+    :root {
+      --bg-color: #f8fafc;
+      --surface-color: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --border-color: #cbd5e1;
+      --primary-color: #1e40af;
+      --primary-hover: #1d4ed8;
+      --danger-color: #b91c1c;
+      --danger-bg: #fef2f2;
+      --success-color: #15803d;
+      --success-bg: #f0fdf4;
+      --focus-ring: #2563eb;
+      --font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Ethiopic", sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-color: #0b0f19;
+        --surface-color: #151d30;
+        --text-main: #f1f5f9;
+        --text-muted: #94a3b8;
+        --border-color: #334155;
+        --primary-color: #3b82f6;
+        --primary-hover: #60a5fa;
+        --danger-color: #f87171;
+        --danger-bg: #450a0a;
+        --success-color: #4ade80;
+        --success-bg: #052e16;
+        --focus-ring: #60a5fa;
+      }
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-family);
+      line-height: 1.7;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      padding: 1.5rem;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 2rem;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1rem;
+    }
+
+    .card {
+      background: var(--surface-color);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .card h2 {
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      min-width: 44px;
+      padding: 0.5rem 1.25rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      text-decoration: none;
+      font-family: inherit;
+    }
+
+    .btn:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+      outline: 3px solid var(--focus-ring);
+      outline-offset: 2px;
+    }
+
+    .btn-primary {
+      background-color: var(--primary-color);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .btn-secondary {
+      background-color: transparent;
+      border-color: var(--border-color);
+      color: var(--text-main);
+    }
+
+    .btn-secondary:hover {
+      background-color: rgba(125, 125, 125, 0.1);
+    }
+
+    .btn-danger {
+      background-color: transparent;
+      border-color: var(--danger-color);
+      color: var(--danger-color);
+    }
+
+    .btn-danger:hover {
+      background-color: var(--danger-bg);
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .file-input-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    .cue-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .cue-item {
+      background: var(--surface-color);
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1.25rem;
+      transition: border-color 0.15s ease;
+    }
+
+    .cue-item.has-error {
+      border-color: var(--danger-color);
+      background-color: var(--danger-bg);
+    }
+
+    .cue-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .cue-title {
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    .cue-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    label {
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+
+    input[type="text"], input[type="file"], textarea, select {
+      min-height: 44px;
+      padding: 0.5rem 0.75rem;
+      font-family: inherit;
+      font-size: 0.95rem;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background: var(--surface-color);
+      color: var(--text-main);
+      width: 100%;
+    }
+
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .cue-feedback {
+      margin-top: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .cue-feedback.error {
+      background-color: var(--danger-bg);
+      color: var(--danger-color);
+      border: 1px solid var(--danger-color);
+    }
+
+    .cue-feedback.ok {
+      background-color: var(--success-bg);
+      color: var(--success-color);
+      border: 1px solid var(--success-color);
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .rules-card {
+      background: rgba(30, 64, 175, 0.05);
+      border-left: 4px solid var(--primary-color);
+    }
+
+    .rules-card ul {
+      padding-inline-start: 1.5rem;
+      margin-top: 0.5rem;
+    }
+
+    #live-status {
+      margin-top: 1rem;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>Savanna Caption Reviewer &amp; Editor</h1>
+        <p class="subtitle" id="editor-sub">Validate WebVTT captions against SRS limits: 2 lines max, ~32 chars/line, 1–7s duration.</p>
+      </div>
+      <div>
+        <button type="button" class="btn btn-secondary" id="lang-toggle-btn">
+          🌐 አማርኛ / English
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <section class="card rules-card" aria-labelledby="rules-title">
+        <h2 id="rules-title">📋 WebVTT Review Gate Requirements (FR-A2 / FR-A3)</h2>
+        <ul>
+          <li><strong>Lines per cue:</strong> At most 2 lines.</li>
+          <li><strong>Line length:</strong> About 32 characters per line (max 37 characters).</li>
+          <li><strong>Cue duration:</strong> Between 1.0 and 7.0 seconds.</li>
+          <li><strong>Timestamps:</strong> Valid chronological timestamps (e.g. <code>00:00:01.000 --&gt; 00:00:03.500</code>) with no negative or overlapping cues.</li>
+        </ul>
+      </section>
+
+      <section class="card" aria-labelledby="controls-title">
+        <h2 id="controls-title">📂 Load and Actions</h2>
+        <div class="toolbar" role="toolbar" aria-label="Editor controls">
+          <label for="vtt-file-input" class="btn btn-secondary" style="margin-bottom: 0;">
+            📁 Choose Draft VTT
+            <input type="file" id="vtt-file-input" accept=".vtt,.txt" class="sr-only">
+          </label>
+          <button type="button" class="btn btn-secondary" id="btn-load-amharic">Load Sample Amharic Draft</button>
+          <button type="button" class="btn btn-secondary" id="btn-load-english">Load Sample English Draft</button>
+          <button type="button" class="btn btn-secondary" id="btn-add-cue">+ Add New Cue</button>
+          <button type="button" class="btn btn-primary" id="btn-export-vtt">💾 Export Valid WebVTT</button>
+        </div>
+        <div id="live-status" role="status" aria-live="polite"></div>
+      </section>
+
+      <section class="card" aria-labelledby="cues-heading">
+        <h2 id="cues-heading">✏️ Cue Editor (<span id="cue-count">0</span> cues)</h2>
+        <ul class="cue-list" id="cue-list" aria-label="Editable WebVTT Cues"></ul>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // Amharic sample draft
+    const SAMPLE_AMHARIC_VTT = `WEBVTT - Amharic Sample Draft
+
+1
+00:00:01.000 --> 00:00:04.000
+እንኳን ወደዚህ ተደራሽ የትምህርት
+ዝግጅት በደህና መጡ።
+
+2
+00:00:04.500 --> 00:00:08.500
+በዚህ ክፍል የድረ-ገጽ ተደራሽነትን
+በተግባር እንማራለን።
+`;
+
+    const SAMPLE_ENGLISH_VTT = `WEBVTT - English Sample Draft
+
+1
+00:00:01.000 --> 00:00:03.500
+Welcome to the Savanna Access Kit
+interactive learning platform.
+
+2
+00:00:04.000 --> 00:00:07.500
+This module provides universal access
+for Deaf and blind learners.
+`;
+
+    let cues = [];
+    let isAmharicUi = false;
+
+    // Time parsing and formatting helpers
+    function parseTimestamp(ts) {
+      const match = /^(?:(\d{2,}):)?(\d{2}):(\d{2})\.(\d{3})$/.exec(ts.trim());
+      if (!match) return null;
+      const hours = match[1] ? parseInt(match[1], 10) : 0;
+      const minutes = parseInt(match[2] || "0", 10);
+      const seconds = parseInt(match[3] || "0", 10);
+      const millis = parseInt(match[4] || "0", 10);
+      return hours * 3600 + minutes * 60 + seconds + millis / 1000;
+    }
+
+    function formatTimestamp(sec) {
+      if (isNaN(sec) || sec < 0) sec = 0;
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = Math.floor(sec % 60);
+      const ms = Math.floor((sec % 1) * 1000);
+      const pad = (n, w = 2) => String(n).padStart(w, "0");
+      return `${pad(h)}:${pad(m)}:${pad(s)}.${pad(ms, 3)}`;
+    }
+
+    function parseVTT(text) {
+      const lines = text.replace(/\\r\\n/g, "\\n").replace(/\\r/g, "\\n").split("\\n");
+      const parsedCues = [];
+      let i = 0;
+      if (lines[0] && lines[0].charCodeAt(0) === 0xfeff) lines[0] = lines[0].slice(1);
+      if (!lines[0] || !lines[0].trim().startsWith("WEBVTT")) {
+        alert(isAmharicUi ? "ፋይሉ WEBVTT መሆን አለበት!" : "The file does not start with WEBVTT!");
+        return [];
+      }
+      i = 1;
+      while (i < lines.length && (lines[i] || "").trim() !== "") i++;
+
+      let count = 0;
+      while (i < lines.length) {
+        while (i < lines.length && (lines[i] || "").trim() === "") i++;
+        if (i >= lines.length) break;
+        count++;
+        let cueId = "";
+        let line = lines[i] || "";
+        if (!line.includes("-->")) {
+          cueId = line.trim();
+          i++;
+        }
+        const timingLine = (lines[i] || "").trim();
+        i++;
+        const parts = timingLine.split("-->");
+        const startStr = (parts[0] || "").trim();
+        const endStr = (parts[1] || "").trim().split(/[ \\t]/)[0];
+        const textLines = [];
+        while (i < lines.length && (lines[i] || "").trim() !== "") {
+          textLines.push((lines[i] || "").trim());
+          i++;
+        }
+        parsedCues.push({
+          id: cueId || String(count),
+          start: startStr || "00:00:00.000",
+          end: endStr || "00:00:02.000",
+          text: textLines.join("\\n")
+        });
+      }
+      return parsedCues;
+    }
+
+    function validateCue(cue, prevEndSec) {
+      const issues = [];
+      const startSec = parseTimestamp(cue.start);
+      const endSec = parseTimestamp(cue.end);
+
+      if (startSec === null) issues.push(isAmharicUi ? "የመጀመሪያ ሰዓት ልክ አይደለም (hh:mm:ss.mmm)" : "Invalid start timestamp (hh:mm:ss.mmm)");
+      if (endSec === null) issues.push(isAmharicUi ? "የማብቂያ ሰዓት ልክ አይደለም (hh:mm:ss.mmm)" : "Invalid end timestamp (hh:mm:ss.mmm)");
+
+      if (startSec !== null && endSec !== null) {
+        const dur = endSec - startSec;
+        if (dur <= 0) issues.push(isAmharicUi ? "የማብቂያ ሰዓት ከመጀመሪያው መቅደም አለበት" : "End time must be after start time");
+        else if (dur < 0.95) issues.push(isAmharicUi ? `ርዝመት (${dur.toFixed(1)}s) ከ1 ሴኮንድ ያነሰ ነው` : `Duration (${dur.toFixed(1)}s) is shorter than 1.0s minimum`);
+        else if (dur > 7.05) issues.push(isAmharicUi ? `ርዝመት (${dur.toFixed(1)}s) ከ7 ሴኮንድ ይበልጣል` : `Duration (${dur.toFixed(1)}s) exceeds 7.0s maximum`);
+
+        if (prevEndSec !== null && startSec < prevEndSec - 0.05) {
+          issues.push(isAmharicUi ? "ይህ መግለጫ ካለፈው ጋር ይጋጫል" : "Starts before previous cue ends (overlap)");
+        }
+      }
+
+      const lines = cue.text.split("\\n").map(l => l.trim()).filter(Boolean);
+      if (lines.length === 0) {
+        issues.push(isAmharicUi ? "ፅሁፍ የለውም" : "No caption text");
+      } else if (lines.length > 2) {
+        issues.push(isAmharicUi ? `የመስመሮች ብዛት ${lines.length} ነው (ከፍተኛው 2 መስመር ነው)` : `Has ${lines.length} lines (maximum allowed is 2)`);
+      }
+
+      for (let li = 0; li < lines.length; li++) {
+        const clean = lines[li].replace(/<[^>]+>/g, "").trim();
+        const len = [...clean].length;
+        if (len > 37) {
+          issues.push(isAmharicUi ? `መስመር ${li + 1} ርዝመት ${len} ነው (ከፍተኛው 37 ነው)` : `Line ${li + 1} length is ${len} chars (exceeds 37 limit)`);
+        }
+      }
+
+      return {
+        valid: issues.length === 0,
+        issues,
+        endSec: endSec !== null ? endSec : 0
+      };
+    }
+
+    function renderCues() {
+      const list = document.getElementById("cue-list");
+      list.innerHTML = "";
+      document.getElementById("cue-count").textContent = cues.length;
+
+      let prevEnd = null;
+      let totalErrors = 0;
+
+      cues.forEach((cue, index) => {
+        const validation = validateCue(cue, prevEnd);
+        if (!validation.valid) totalErrors += validation.issues.length;
+        prevEnd = validation.endSec;
+
+        const li = document.createElement("li");
+        li.className = "cue-item" + (validation.valid ? "" : " has-error");
+
+        const cueId = `cue-${index + 1}`;
+        const startId = `start-${index + 1}`;
+        const endId = `end-${index + 1}`;
+        const textId = `text-${index + 1}`;
+        const statusId = `status-${index + 1}`;
+
+        li.innerHTML = `
+          <div class="cue-header">
+            <span class="cue-title">${isAmharicUi ? "መግለጫ" : "Cue"} #${index + 1}</span>
+            <button type="button" class="btn btn-danger" data-remove="${index}" aria-label="${isAmharicUi ? "ይህን መግለጫ ሰርዝ" : "Delete cue"} #${index + 1}">
+              🗑️ ${isAmharicUi ? "ሰርዝ" : "Delete"}
+            </button>
+          </div>
+          <div class="cue-grid">
+            <div class="field-group">
+              <label for="${startId}">${isAmharicUi ? "የመጀመሪያ ሰዓት" : "Start Time"} (hh:mm:ss.mmm):</label>
+              <input type="text" id="${startId}" data-field="start" data-index="${index}" value="${cue.start}" aria-describedby="${statusId}">
+            </div>
+            <div class="field-group">
+              <label for="${endId}">${isAmharicUi ? "የማብቂያ ሰዓት" : "End Time"} (hh:mm:ss.mmm):</label>
+              <input type="text" id="${endId}" data-field="end" data-index="${index}" value="${cue.end}" aria-describedby="${statusId}">
+            </div>
+          </div>
+          <div class="field-group">
+            <label for="${textId}">${isAmharicUi ? "የመግለጫ ፅሁፍ (ከፍተኛው 2 መስመር)" : "Caption Text (max 2 lines)"}:</label>
+            <textarea id="${textId}" data-field="text" data-index="${index}" aria-describedby="${statusId}">${cue.text}</textarea>
+          </div>
+          <div id="${statusId}" class="cue-feedback ${validation.valid ? "ok" : "error"}" role="${validation.valid ? "status" : "alert"}">
+            ${validation.valid ? (isAmharicUi ? "✓ መስፈርቱን ያሟላል" : "✓ Meets all requirements (1–7s, max 2 lines, ≤37 chars)") : ("⚠️ " + validation.issues.join("; "))}
+          </div>
+        `;
+        list.appendChild(li);
+      });
+
+      const liveStatus = document.getElementById("live-status");
+      if (cues.length === 0) {
+        liveStatus.textContent = isAmharicUi ? "ምንም መግለጫ አልተጫነም።" : "No cues loaded. Load a file or sample above.";
+        liveStatus.style.color = "var(--text-muted)";
+      } else if (totalErrors === 0) {
+        liveStatus.textContent = isAmharicUi ? `✓ ሁሉም ${cues.length} መግለጫዎች ትክክል ናቸው። ለምርመራ ዝግጁ ነው!` : `✓ All ${cues.length} cues pass validation. Ready to export!`;
+        liveStatus.style.color = "var(--success-color)";
+      } else {
+        liveStatus.textContent = isAmharicUi ? `⚠️ ${totalErrors} ስህተት(ቶች) ተገኝተዋል። እባክዎ ከላይ ያሉትን ቀይ ክፍሎች ያስተካክሉ።` : `⚠️ Found ${totalErrors} validation issue(s). Please resolve highlighted issues.`;
+        liveStatus.style.color = "var(--danger-color)";
+      }
+    }
+
+    // Event handling
+    document.getElementById("cue-list").addEventListener("input", (e) => {
+      const target = e.target;
+      const index = target.dataset.index;
+      const field = target.dataset.field;
+      if (index !== undefined && field && cues[index]) {
+        cues[index][field] = target.value;
+        renderCues();
+      }
+    });
+
+    document.getElementById("cue-list").addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-remove]");
+      if (btn) {
+        const index = parseInt(btn.dataset.remove, 10);
+        cues.splice(index, 1);
+        renderCues();
+      }
+    });
+
+    document.getElementById("btn-add-cue").addEventListener("click", () => {
+      let nextStart = "00:00:00.000";
+      let nextEnd = "00:00:02.500";
+      if (cues.length > 0) {
+        const last = cues[cues.length - 1];
+        const lastEndSec = parseTimestamp(last.end) || 0;
+        nextStart = formatTimestamp(lastEndSec + 0.5);
+        nextEnd = formatTimestamp(lastEndSec + 3.0);
+      }
+      cues.push({
+        id: String(cues.length + 1),
+        start: nextStart,
+        end: nextEnd,
+        text: isAmharicUi ? "አዲስ መግለጫ" : "New caption cue text"
+      });
+      renderCues();
+      // focus the new cue text
+      setTimeout(() => {
+        const lastInput = document.getElementById(`text-${cues.length}`);
+        if (lastInput) lastInput.focus();
+      }, 50);
+    });
+
+    document.getElementById("btn-load-amharic").addEventListener("click", () => {
+      cues = parseVTT(SAMPLE_AMHARIC_VTT);
+      renderCues();
+    });
+
+    document.getElementById("btn-load-english").addEventListener("click", () => {
+      cues = parseVTT(SAMPLE_ENGLISH_VTT);
+      renderCues();
+    });
+
+    document.getElementById("vtt-file-input").addEventListener("change", (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          cues = parseVTT(evt.target.result);
+          renderCues();
+        };
+        reader.readAsText(file);
+      }
+    });
+
+    document.getElementById("btn-export-vtt").addEventListener("click", () => {
+      if (cues.length === 0) {
+        alert(isAmharicUi ? "የሚላክ መግለጫ የለም!" : "No cues to export!");
+        return;
+      }
+      let vtt = "WEBVTT - Reviewed Captions\\n\\n";
+      cues.forEach((c, idx) => {
+        vtt += `${idx + 1}\\n`;
+        vtt += `${c.start} --> ${c.end}\\n`;
+        vtt += `${c.text.trim()}\\n\\n`;
+      });
+
+      const blob = new Blob([vtt], { type: "text/vtt;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = isAmharicUi ? "am.reviewed.vtt" : "captions.reviewed.vtt";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById("lang-toggle-btn").addEventListener("click", () => {
+      isAmharicUi = !isAmharicUi;
+      document.getElementById("editor-sub").textContent = isAmharicUi
+        ? "የ WebVTT መግለጫዎችን በ SRS መስፈርቶች ይገምግሙ፡ ከፍተኛው 2 መስመር፣ ~32 ፊደላት፣ 1–7 ሰከንድ።"
+        : "Validate WebVTT captions against SRS limits: 2 lines max, ~32 chars/line, 1–7s duration.";
+      document.getElementById("rules-title").textContent = isAmharicUi
+        ? "📋 የመግለጫ ግምገማ ደንቦች (FR-A2 / FR-A3)"
+        : "📋 WebVTT Review Gate Requirements (FR-A2 / FR-A3)";
+      document.getElementById("controls-title").textContent = isAmharicUi ? "📂 መጫኛ እና እርምጃዎች" : "📂 Load and Actions";
+      document.getElementById("btn-load-amharic").textContent = isAmharicUi ? "የአማርኛ ረቂቅ ጫን" : "Load Sample Amharic Draft";
+      document.getElementById("btn-load-english").textContent = isAmharicUi ? "የእንግሊዝኛ ረቂቅ ጫን" : "Load Sample English Draft";
+      document.getElementById("btn-add-cue").textContent = isAmharicUi ? "+ አዲስ መግለጫ አክል" : "+ Add New Cue";
+      document.getElementById("btn-export-vtt").textContent = isAmharicUi ? "💾 ትክክለኛ WebVTT ላክ" : "💾 Export Valid WebVTT";
+      document.getElementById("cues-heading").innerHTML = isAmharicUi
+        ? `✏️ የመግለጫ አርታዒ (<span id="cue-count">${cues.length}</span>)`
+        : `✏️ Cue Editor (<span id="cue-count">${cues.length}</span> cues)`;
+      renderCues();
+    });
+
+    // Initial load
+    cues = parseVTT(SAMPLE_AMHARIC_VTT);
+    renderCues();
+  </script>
+</body>
+</html>

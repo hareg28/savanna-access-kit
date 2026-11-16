@@ -80,7 +80,7 @@ export function register(router: Router, ctx: Ctx & { packRoot?: string }) {
     }
   });
 
-  router.get("/lessons/:id/pack.zip", async (req: Request, res: Response) => {
+  router.get(["/lessons/:id/pack.zip", "/lessons/:id/offline-pack"], async (req: Request, res: Response) => {
     const parsed = IdParam.safeParse(req.params);
     if (!parsed.success)
       return problem(res, 400, "Invalid lesson id", "Lesson ids must be alphanumeric (A–Z, 0–9, dash, underscore, 1–80 chars).");

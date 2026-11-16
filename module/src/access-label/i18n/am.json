@@ -1,0 +1,23 @@
+{
+  "label.title": "የተደራሽነት አገልግሎቶች",
+  "label.captions": "ንዑስ ርዕሶች",
+  "label.captionsNone": "ንዑስ ርዕሶች፡ የለም",
+  "label.statusReviewed": "የተረጋገጠ",
+  "label.statusDraft": "ረቂቅ፣ በመገምገም ላይ",
+  "label.sign": "የምልክት ቋንቋ",
+  "label.signYes": "የምልክት ቋንቋ፡ አለ",
+  "label.signNo": "የምልክት ቋንቋ፡ ገና አልተዘጋጀም",
+  "label.ad": "የድምጽ ማብራሪያ",
+  "label.adYes": "የድምጽ ማብራሪያ፡ አለ",
+  "label.adNo": "የድምጽ ማብራሪያ፡ የለም",
+  "label.offline": "ያለ ኢንተርኔት",
+  "label.offlineSize": "ያለ ኢንተርኔት፡ {size} ሜባ",
+  "label.offlineNo": "ያለ ኢንተርኔት፡ ገና አልተዘጋጀም",
+  "label.transcript": "ጽሑፍ እና ማጠቃለያ",
+  "label.transcriptYes": "ጽሑፍ እና ማጠቃለያ፡ አለ",
+  "label.transcriptNo": "ጽሑፍ እና ማጠቃለያ፡ የለም",
+  "label.reading": "ንባብ",
+  "label.readingPlain": "ንባብ፡ ቀላል ቋንቋ",
+  "label.loading": "የተደራሽነት ዝርዝር በመጫን ላይ...",
+  "label.error": "የተደራሽነት ዝርዝር ማግኘት አልተቻለም"
+}

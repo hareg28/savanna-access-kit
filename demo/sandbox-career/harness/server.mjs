@@ -679,7 +679,12 @@ export const handleRequest = async (req, res) => {
       if (!record) return problem(res, 404, "Not Found", "Credential was not found.");
       const lang = pageLanguage(url.searchParams.get("lang"));
       const { chromium } = await import("playwright");
-      const browser = await chromium.launch({ headless: true });
+      const launchOptions = { headless: true };
+      try {
+        // Use Chrome if available
+        launchOptions.channel = "chrome";
+      } catch {}
+      const browser = await chromium.launch(launchOptions);
       try {
         const page = await browser.newPage();
         const achievement = record.i18n?.achievement?.[lang] ?? record.achievement;

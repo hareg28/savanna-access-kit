@@ -7,7 +7,7 @@ import type { OperationDoc } from "../lib/openapi";
 export const access = "public" as const;
 
 export function register(router: Router, _ctx: Ctx) {
-  router.get("/v1/health", (_req, res) => {
+  router.get(["/v1/health", "/api/v1/health", "/health"], (_req, res) => {
     res.json({ status: "ok", time: new Date().toISOString() });
   });
 }

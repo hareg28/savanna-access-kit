@@ -1,0 +1,8 @@
+{
+  "share.button": "ይህን ትምህርት አጋራ",
+  "share.size": "({size} ሜባ)",
+  "share.notAvailable": "ለዚህ ትምህርት ገና አልተዘጋጀም",
+  "share.downloading": "የትምህርት ፋይል በመዘጋጀት ላይ...",
+  "share.ready": "የትምህርት ፋይል ተዘጋጅቷል፣ {size} ሜባ",
+  "share.error": "የትምህርት ፋይል ማውረድ አልተቻለም"
+}

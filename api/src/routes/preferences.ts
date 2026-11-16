@@ -29,6 +29,23 @@ export function register(router: Router, ctx: Ctx) {
     await ctx.store.setPreferences(hash, prefs);
     res.json(prefs);
   });
+
+  router.get("/preferences/export", async (req, res) => {
+    const hash = userHash(req);
+    const prefs = (await ctx.store.getPreferences(hash)) ?? {};
+    res.setHeader("Content-Disposition", 'attachment; filename="savanna-preferences.json"');
+    res.json({
+      exportedAt: new Date().toISOString(),
+      userHash: hash,
+      preferences: prefs,
+    });
+  });
+
+  router.delete("/preferences", async (req, res) => {
+    const hash = userHash(req);
+    await ctx.store.deletePreferences(hash);
+    res.json({ status: "deleted", message: "Preferences deleted." });
+  });
 }
 
 const UserHeader = z.object({
@@ -46,5 +63,31 @@ export const openapi: OperationDoc[] = [
     description: "Replaces the whole object. Each owner writes only their own namespace (contract C3).",
     headers: UserHeader, body: PreferencesSchema,
     responses: { 200: { description: "The saved preferences.", schema: PreferencesSchema } },
+  },
+  {
+    method: "get", path: "/preferences/export", summary: "Export a user's preferences (FR-A4 / NFR-S3)", tags: ["Preferences"],
+    description: "Exports all stored preferences for the user. Alias: /api/v1/preferences/export",
+    headers: UserHeader,
+    responses: {
+      200: {
+        description: "Exported preferences file.",
+        schema: z.object({
+          exportedAt: z.string(),
+          userHash: z.string(),
+          preferences: PreferencesSchema,
+        }),
+      },
+    },
+  },
+  {
+    method: "delete", path: "/preferences", summary: "Delete a user's preferences (FR-A4 / NFR-S3)", tags: ["Preferences"],
+    description: "Permanently clears all stored preferences for the user. Alias: /api/v1/preferences",
+    headers: UserHeader,
+    responses: {
+      200: {
+        description: "Confirmation of deletion.",
+        schema: z.object({ status: z.literal("deleted"), message: z.string() }),
+      },
+    },
   },
 ];

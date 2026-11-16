@@ -1,0 +1,23 @@
+/*
+ * Savanna Starter Accessibility Patch (FR-I5b).
+ * Non-invasive fix for legacy Savanna template defects:
+ * - Color contrast on curriculum badges and navigation links
+ */
+
+/* Accessible contrast for current lesson badge */
+a[aria-current="true"] > div > span,
+.d-inline-flex > span {
+  background-color: #b91c1c !important; /* WCAG AA 4.5:1 compliant red */
+  color: #ffffff !important;
+}
+
+/* Accessible contrast for secondary links */
+#curriculum_navigation_content a,
+#sidebar a {
+  color: #0369a1 !important; /* WCAG AA compliant link blue */
+}
+
+#curriculum_navigation_content a:hover,
+#sidebar a:hover {
+  color: #0c4a6e !important;
+}

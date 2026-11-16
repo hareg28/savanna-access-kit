@@ -1,0 +1,16 @@
+{
+  "profile.title": "ለእኔ አመቻች",
+  "profile.description": "የሚፈልጉትን አገልግሎት ይምረጡ። ማዋሃድ ወይም በማንኛውም ጊዜ ማስተካከል ይችላሉ።",
+  "profile.cantSee": "ማየት አልችልም",
+  "profile.cantHear": "መስማት አልችልም",
+  "profile.lowData": "አነስተኛ ዳታ",
+  "profile.hardToRead": "ለማንበብ ከባድ ነው",
+  "profile.skip": "ለጊዜው ይለፍ",
+  "profile.undo": "ወደ ቀድሞ መልስ",
+  "profile.appliedCantSee": "የድምጽ ማብራሪያ በርቷል፣ የአቋራጭ ቁልፎች ነቅተዋል።",
+  "profile.appliedCantHear": "ንዑስ ርዕሶች በ150% ከፍ ተደርገዋል፣ የምልክት ቋንቋ መስኮት ተከፍቷል።",
+  "profile.appliedLowData": "አነስተኛ ዳታ፡ ያለ ኢንተርኔት መጠቀም ተመርጧል።",
+  "profile.appliedHardToRead": "ለማንበብ ቀላል፡ ከፍተኛ ንፅፅር ቀለም በርቷል፣ ንዑስ ርዕሶች በ200% አድገዋል።",
+  "profile.undone": "ቅንብሮች ወደ ቀድሞ ሁኔታቸው ተመልሰዋል።",
+  "profile.skipped": "የማስተካከያ ፓነሉ ተደብቋል።"
+}

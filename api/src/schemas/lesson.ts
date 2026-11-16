@@ -4,6 +4,35 @@ const url = z.string().url();
 export const Lang = z.enum(["en", "am"]);
 export type Lang = z.infer<typeof Lang>;
 
+export const CaptionStatus = z.enum(["reviewed", "draft"]);
+export type CaptionStatus = z.infer<typeof CaptionStatus>;
+
+export const AccessSummarySchema = z.object({
+  captions: z.array(
+    z.object({
+      lang: Lang,
+      status: CaptionStatus,
+    }),
+  ),
+  sign: z.boolean(),
+  audioDescription: z.object({
+    recorded: z.boolean(),
+    text: z.boolean(),
+  }),
+  offline: z.object({
+    sizeBytes: z.number().int().nonnegative(),
+  }).nullable(),
+  transcript: z.boolean(),
+  summary: z.boolean(),
+});
+export type AccessSummary = z.infer<typeof AccessSummarySchema>;
+
+export const ShareInfoSchema = z.object({
+  url: z.string(),
+  sizeBytes: z.number().int().nonnegative(),
+});
+export type ShareInfo = z.infer<typeof ShareInfoSchema>;
+
 /** Contract C1. The API output AND contracts/fixtures/v1/lessons/*.json must both satisfy this. */
 export const LessonManifestSchema = z.object({
   id: z.string().min(1),
@@ -15,6 +44,8 @@ export const LessonManifestSchema = z.object({
   audioDescription: z.object({ audioUrl: url, vttUrl: url, extended: z.boolean() }).nullable(),
   transcript: z.object({ url: z.string().startsWith("/v1/") }),
   pack: z.object({ manifestUrl: z.string().startsWith("/v1/"), sizeBytes: z.number().int().nonnegative() }).nullable(),
+  access: AccessSummarySchema.optional().nullable(),
+  share: ShareInfoSchema.optional().nullable(),
 });
 export type LessonManifest = z.infer<typeof LessonManifestSchema>;
 

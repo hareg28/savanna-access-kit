@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="am">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Savanna Access Kit — Standalone Proof (Outside Savanna)</title>
+    <!--
+      PROVE LEVEL 1 DROP-IN INTEGRATION:
+      This is a clean partner page with NO Bootstrap, NO Savanna styles, and NO framework dependencies.
+      Components self-register from a single module bundle, encapsulate styles via Shadow DOM,
+      and communicate with the host via CustomEvents.
+    -->
+    <script type="module" src="../dist/savanna-access.v1.js"></script>
+    <style>
+      :root {
+        --savanna-accent: #0369a1;
+        --savanna-font: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Ethiopic", sans-serif;
+        --savanna-radius: 8px;
+        --savanna-focus: #f59e0b;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 1.5rem;
+        font-family: var(--savanna-font);
+        background: #f8fafc;
+        color: #0f172a;
+        line-height: 1.6;
+      }
+
+      header {
+        max-width: 1040px;
+        margin: 0 auto 2rem auto;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e2e8f0;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 1.6rem;
+      }
+
+      .host-tag {
+        display: inline-block;
+        padding: 0.25rem 0.6rem;
+        background: #e0f2fe;
+        color: #0369a1;
+        font-size: 0.82rem;
+        font-weight: 600;
+        border-radius: 4px;
+      }
+
+      .lang-switch {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      button.lang-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        background: #fff;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+        min-height: 44px;
+      }
+
+      button.lang-btn:hover {
+        background: #f1f5f9;
+      }
+
+      button.lang-btn[aria-pressed="true"] {
+        background: var(--savanna-accent, #0369a1);
+        color: #fff;
+        border-color: var(--savanna-accent, #0369a1);
+      }
+
+      button.lang-btn:focus-visible {
+        outline: 3px solid var(--savanna-focus);
+        outline-offset: 2px;
+      }
+
+      main {
+        max-width: 1040px;
+        margin: 0 auto;
+      }
+
+      .card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: var(--savanna-radius);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      }
+
+      .card h2 {
+        margin-top: 0;
+        font-size: 1.25rem;
+        border-bottom: 1px solid #f1f5f9;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+      }
+
+      #event-log {
+        background: #0f172a;
+        color: #38bdf8;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.85rem;
+        padding: 1rem;
+        border-radius: 6px;
+        max-height: 180px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+      }
+
+      .grid-cols {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 1.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <span class="host-tag">External Partner Host Environment</span>
+        <h1>Savanna Access Kit — Standalone Proof</h1>
+      </div>
+      <div class="lang-switch" role="group" aria-label="Language switcher">
+        <button type="button" class="lang-btn" data-lang="am" aria-pressed="true">አማርኛ (Amharic)</button>
+        <button type="button" class="lang-btn" data-lang="en" aria-pressed="false">English</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- SECTION 1: ACCESSIBLE MEDIA PLAYER & SIGN / AD / OFFLINE -->
+      <section class="card" aria-labelledby="player-demo-heading">
+        <h2 id="player-demo-heading">1. Accessible Learning Media (&lt;savanna-player&gt;)</h2>
+        <p>
+          Drop-in player with synchronized Amharic/English captions, movable/resizable Ethiopian Sign Language (ESL)
+          interpreter window, audio description (D key), and low-bandwidth offline pack.
+        </p>
+
+        <div style="margin-top: 1rem;">
+          <!-- Extra Features: Access Label & Set up for me (Addendum 1.2) -->
+          <savanna-access-label
+            lesson="L-102"
+            api="http://localhost:4010"
+            api-key="pk_dev_local"
+          ></savanna-access-label>
+
+          <savanna-access-profiles></savanna-access-profiles>
+
+          <savanna-player
+            id="standalone-player"
+            lesson="L-102"
+            lang="am"
+            api="http://localhost:4010"
+            api-key="pk_dev_local"
+          >
+            <savanna-sign-window slot="overlay"></savanna-sign-window>
+            <savanna-audio-description></savanna-audio-description>
+            <savanna-offline api="http://localhost:4010" api-key="pk_dev_local" lesson-id="L-102"></savanna-offline>
+          </savanna-player>
+
+          <!-- Extra Feature: Lesson in a File (Addendum 1.2) -->
+          <div style="margin-top: 1rem;">
+            <savanna-share-button
+              lesson="L-102"
+              api="http://localhost:4010"
+              api-key="pk_dev_local"
+            ></savanna-share-button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 2: CAREER GATEWAY & CREDENTIAL -->
+      <section class="card" aria-labelledby="career-demo-heading">
+        <h2 id="career-demo-heading">2. Career Gateway & Verifiable Credential</h2>
+        <p>
+          Drop-in career card with audio summary and single-column 200%/400% zoom reflow, paired with an Open Badges 3.0 verifiable credential badge.
+        </p>
+
+        <div class="grid-cols" style="margin-top: 1rem;">
+          <savanna-job-card
+            job="J-9"
+            api="http://localhost:4010"
+            api-key="pk_dev_local"
+            lang="am"
+          ></savanna-job-card>
+
+          <savanna-credential
+            id="C-7"
+            api="http://localhost:4010"
+            api-key="pk_dev_local"
+            lang="am"
+          ></savanna-credential>
+        </div>
+      </section>
+
+      <!-- SECTION 3: HOST EVENT OBSERVER -->
+      <section class="card" aria-labelledby="events-heading">
+        <h2 id="events-heading">3. Host Event Bus (Settings In, Events Out)</h2>
+        <p>
+          The host page listens to events emitted by the custom elements:
+        </p>
+        <div id="event-log" role="log" aria-live="polite" aria-label="Component events log">[Host Bus Initialized] Listening for savanna:* events...</div>
+      </section>
+    </main>
+
+    <script>
+      const logEl = document.getElementById("event-log");
+      function logEvent(name, detail) {
+        const time = new Date().toLocaleTimeString();
+        const line = `[${time}] Event: ${name} -> ${JSON.stringify(detail || {})}\n`;
+        logEl.textContent = line + logEl.textContent;
+      }
+
+      // Listen for all contract events
+      const events = [
+        "savanna:ready",
+        "savanna:play",
+        "savanna:pause",
+        "savanna:seek",
+        "savanna:timeupdate",
+        "savanna:caption-change",
+        "savanna:complete",
+        "savanna:error",
+        "savanna:lang-change"
+      ];
+
+      events.forEach((evtName) => {
+        window.addEventListener(evtName, (e) => {
+          if (evtName !== "savanna:timeupdate") {
+            logEvent(evtName, e.detail);
+          }
+        });
+      });
+
+      // Language Switcher handler
+      const langBtns = document.querySelectorAll(".lang-btn");
+      langBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const lang = btn.dataset.lang;
+          document.documentElement.lang = lang;
+          langBtns.forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
+
+          // Update attributes on all Savanna components
+          document.querySelectorAll("savanna-player, savanna-job-card, savanna-credential").forEach((el) => {
+            el.setAttribute("lang", lang);
+          });
+
+          // Dispatch language change event (Contract C4)
+          window.dispatchEvent(new CustomEvent("savanna:lang-change", { detail: { lang } }));
+          logEvent("savanna:lang-change", { lang });
+        });
+      });
+    </script>
+  </body>
+</html>

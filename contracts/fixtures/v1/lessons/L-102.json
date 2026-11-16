@@ -27,5 +27,25 @@
   "pack": {
     "manifestUrl": "/v1/lessons/L-102/pack",
     "sizeBytes": 1800000
+  },
+  "access": {
+    "captions": [
+      { "lang": "en", "status": "reviewed" },
+      { "lang": "am", "status": "reviewed" }
+    ],
+    "sign": false,
+    "audioDescription": {
+      "recorded": false,
+      "text": false
+    },
+    "offline": {
+      "sizeBytes": 1800000
+    },
+    "transcript": true,
+    "summary": true
+  },
+  "share": {
+    "url": "/v1/lessons/L-102/share.html",
+    "sizeBytes": 1800000
   }
 }

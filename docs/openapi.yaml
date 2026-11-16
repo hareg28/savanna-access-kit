@@ -1,0 +1,2133 @@
+openapi: 3.1.0
+info:
+  title: Savanna Access Kit API
+  version: 1.0.0
+  description: "Level 2 integration (REST) for the Savanna Access Kit: accessible
+    lessons, captions, transcripts, offline packs, jobs and verifiable
+    credentials. Browser components send a publishable key (`pk_...`);
+    server-to-server calls use the secret key. Errors are
+    `application/problem+json` (RFC 9457)."
+servers:
+  - url: /
+paths:
+  /v1/health:
+    get:
+      operationId: getV1Health
+      summary: Health check
+      tags:
+        - Ops
+      responses:
+        "200":
+          description: The API is up.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    const: ok
+                  time:
+                    type: string
+                required:
+                  - status
+                  - time
+                additionalProperties: false
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema: &a1
+                $ref: "#/components/schemas/Problem"
+      security: []
+  /v1/lessons:
+    get:
+      operationId: getV1Lessons
+      summary: List lessons
+      tags:
+        - Lessons
+      responses:
+        "200":
+          description: Published lessons.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  lessons:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        title:
+                          type: object
+                          properties:
+                            en:
+                              type: string
+                            am:
+                              type: string
+                          required:
+                            - en
+                            - am
+                          additionalProperties: false
+                        durationSec:
+                          type: integer
+                          minimum: -9007199254740991
+                          maximum: 9007199254740991
+                      required:
+                        - id
+                        - title
+                        - durationSec
+                      additionalProperties: false
+                required:
+                  - lessons
+                additionalProperties: false
+        "401":
+          description: Missing or invalid X-Savanna-Key.
+          content:
+            application/problem+json:
+              schema: *a1
+        "403":
+          description: This key is not allowed from this origin.
+          content:
+            application/problem+json:
+              schema: *a1
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema: *a1
+      security:
+        - ApiKey: []
+  /v1/lessons/{id}:
+    get:
+      operationId: getV1LessonsId
+      summary: Get a lesson manifest
+      description: "Everything a player needs: media, English and Amharic captions,
+        sign video, audio description, transcript and offline pack. Fields that
+        do not exist for a lesson are null. Alias: /api/v1/lessons/{id}"
+      tags:
+        - Lessons
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Lesson id, e.g. L-102
+          schema:
+            type: string
+            description: Lesson id, e.g. L-102
+      responses:
+        "200":
+          description: The lesson manifest (contract C1).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    minLength: 1
+                  title:
+                    type: object
+                    properties:
+                      en:
+                        type: string
+                      am:
+                        type: string
+                    required:
+                      - en
+                      - am
+                    additionalProperties: false
+                  durationSec:
+                    type: integer
+                    minimum: 0
+                    maximum: 9007199254740991
+                  media:
+                    type: object
+                    properties:
+                      video:
+                        type: string
+                        format: uri
+                      audio:
+                        type: string
+                        format: uri
+                    required:
+                      - video
+                      - audio
+                    additionalProperties: false
+                  captions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        lang:
+                          type: string
+                          enum:
+                            - en
+                            - am
+                        url:
+                          type: string
+                          format: uri
+                      required:
+                        - lang
+                        - url
+                      additionalProperties: false
+                  sign:
+                    anyOf:
+                      - type: object
+                        properties:
+                          url:
+                            type: string
+                            format: uri
+                          offsetMs:
+                            type: integer
+                            minimum: -9007199254740991
+                            maximum: 9007199254740991
+                        required:
+                          - url
+                          - offsetMs
+                        additionalProperties: false
+                      - type: "null"
+                  audioDescription:
+                    anyOf:
+                      - type: object
+                        properties:
+                          audioUrl:
+                            type: string
+                            format: uri
+                          vttUrl:
+                            type: string
+                            format: uri
+                          extended:
+                            type: boolean
+                        required:
+                          - audioUrl
+                          - vttUrl
+                          - extended
+                        additionalProperties: false
+                      - type: "null"
+                  transcript:
+                    type: object
+                    properties:
+                      url:
+                        type: string
+                        format: starts_with
+                        pattern: ^\/v1\/.*
+                    required:
+                      - url
+                    additionalProperties: false
+                  pack:
+                    anyOf:
+                      - type: object
+                        properties:
+                          manifestUrl:
+                            type: string
+                            format: starts_with
+                            pattern: ^\/v1\/.*
+                          sizeBytes:
+                            type: integer
+                            minimum: 0
+                            maximum: 9007199254740991
+                        required:
+                          - manifestUrl
+                          - sizeBytes
+                        additionalProperties: false
+                      - type: "null"
+                  access:
+                    anyOf:
+                      - type: object
+                        properties:
+                          captions:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                lang:
+                                  type: string
+                                  enum:
+                                    - en
+                                    - am
+                                status:
+                                  type: string
+                                  enum:
+                                    - reviewed
+                                    - draft
+                              required:
+                                - lang
+                                - status
+                              additionalProperties: false
+                          sign:
+                            type: boolean
+                          audioDescription:
+                            type: object
+                            properties:
+                              recorded:
+                                type: boolean
+                              text:
+                                type: boolean
+                            required:
+                              - recorded
+                              - text
+                            additionalProperties: false
+                          offline:
+                            anyOf:
+                              - type: object
+                                properties:
+                                  sizeBytes:
+                                    type: integer
+                                    minimum: 0
+                                    maximum: 9007199254740991
+                                required:
+                                  - sizeBytes
+                                additionalProperties: false
+                              - type: "null"
+                          transcript:
+                            type: boolean
+                          summary:
+                            type: boolean
+                        required:
+                          - captions
+                          - sign
+                          - audioDescription
+                          - offline
+                          - transcript
+                          - summary
+                        additionalProperties: false
+                      - type: "null"
+                  share:
+                    anyOf:
+                      - type: object
+                        properties:
+                          url:
+                            type: string
+                          sizeBytes:
+                            type: integer
+                            minimum: 0
+                            maximum: 9007199254740991
+                        required:
+                          - url
+                          - sizeBytes
+                        additionalProperties: false
+                      - type: "null"
+                required:
+                  - id
+                  - title
+                  - durationSec
+                  - media
+                  - captions
+                  - sign
+                  - audioDescription
+                  - transcript
+                  - pack
+                additionalProperties: false
+        "401":
+          description: Missing or invalid X-Savanna-Key.
+          content:
+            application/problem+json:
+              schema: *a1
+        "403":
+          description: This key is not allowed from this origin.
+          content:
+            application/problem+json:
+              schema: *a1
+        "404":
+          description: Unknown lesson.
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema: *a1
+      security:
+        - ApiKey: []
+  /v1/lessons/{id}/captions/{file}:
+    get:
+      operationId: getV1LessonsIdCaptionsFile
+      summary: Get a caption file
+      description: Redirects to or serves the WebVTT file for the requested language.
+      tags:
+        - Lessons
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Lesson id, e.g. L-102
+          schema:
+            type: string
+            description: Lesson id, e.g. L-102
+        - name: file
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - en.vtt
+              - am.vtt
+      responses:
+        "302":
+          description: Redirect to the caption file.
+          headers:
+            Location:
+              description: URL of the WebVTT file
+              schema:
+                type: string
+        "401":
+          description: Missing or invalid X-Savanna-Key.
+          content:
+            application/problem+json:
+              schema: *a1
+        "403":
+          description: This key is not allowed from this origin.
+          content:
+            application/problem+json:
+              schema: *a1
+        "404":
+          description: No captions in that language.
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema: *a1
+      security:
+        - ApiKey: []
+  /v1/lessons/{id}/transcript:
+    get:
+      operationId: getV1LessonsIdTranscript
+      summary: Get a lesson transcript
+      description: "Timed transcript lines. Alias: /api/v1/lessons/{id}/transcript"
+      tags:
+        - Lessons
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Lesson id, e.g. L-102
+          schema:
+            type: string
+            description: Lesson id, e.g. L-102
+        - name: lang
+          in: query
+          required: false
+          schema:
+            default: en
+            type: string
+            enum:
+              - en
+              - am
+      responses:
+        "200":
+          description: Timed transcript lines.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  lang:
+                    type: string
+                    enum:
+                      - en
+                      - am
+                  lines:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        start:
+                          type: number
+                          minimum: 0
+                        end:
+                          type: number
+                          minimum: 0
+                        text:
+                          type: string
+                      required:
+                        - start
+                        - end
+                        - text
+                      additionalProperties: false
+                required:
+                  - id
+                  - lang
+                  - lines
+                additionalProperties: false
+        "400":
+          description: The request did not match the expected shape.
+          content:
+            application/problem+json:
+              schema: *a1
+        "401":
+          description: Missing or invalid X-Savanna-Key.
+          content:
+            application/problem+json:
+              schema: *a1
+        "403":
+          description: This key is not allowed from this origin.
+          content:
+            application/problem+json:
+              schema: *a1
+        "404":
+          description: No transcript in that language.
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema: *a1
+      security:
+        - ApiKey: []
+  /v1/lessons/{id}/captions:
+    post:
+      operationId: postV1LessonsIdCaptions
+      summary: Upload and review corrected captions
+      description: "Accepts and validates a WebVTT file for one language (2 lines max,
+        ~32 chars/line, 1-7s duration, valid timestamps). Sets reviewed=true on
+        success. Alias: /api/v1/lessons/{id}/captions"
+      tags:
+        - Lessons
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Lesson id, e.g. L-102
+          schema:
+            type: string
+            description: Lesson id, e.g. L-102
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                lang:
+                  type: string
+                  enum:
+                    - en
+                    - am
+                vtt:
+                  type: string
+                  description: WebVTT caption content
+              required:
+                - lang
+                - vtt
+      responses:
+        "200":
+          description: Caption accepted and approved.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    const: ok
+                  lessonId:
+                    type: string
+                  lang:
+                    type: string
+                    enum:
+                      - en
+                      - am
+                  reviewed:
+                    type: boolean
+                    const: true
+                  cueCount:
+                    type: number
+                  url:
+                    type: string
+                required:
+                  - status
+                  - lessonId
+                  - lang
+                  - reviewed
+                  - cueCount
+                  - url
+                additionalProperties: false
+        "400":
+          description: Validation error with cue number and message (RFC 9457).
+        "401":
+          description: Missing or invalid X-Savanna-Key.
+          content:
+            application/problem+json:
+              schema: *a1
+        "403":
+          description: Requires secret key.
+        "404":
+          description: Unknown lesson.
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema: *a1
+      security:
+        - ApiKey: []
+  /v1/credentials:
+    post:
+      operationId: postV1Credentials
+      summary: Issue a verifiable credential
+      description: Secret-key-only action. Use a pseudonymous recipient reference, not
+        personal contact details.
+      tags:
+        - CareerGateway
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                recipientRef:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                  description: Pseudonymous learner reference; do not send an email address.
+                achievement:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                recipientName:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                expiresAt:
+                  type: string
+                  format: date-time
+                  pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+              required:
+                - recipientRef
+                - achievement
+      responses:
+        "201":
+          description: Issued Open Badges 3.0 credential.
+          content:
+            application/ld+json:
+              schema:
+                type: object
+                properties:
+                  "@context":
+                    type: array
+                    items:
+                      type: string
+                  id:
+                    type: string
+                    format: uri
+                  type:
+                    type: array
+                    items:
+                      type: string
+                  name:
+                    type: string
+                  issuer:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      type:
+                        type: array
+                        items:
+                          type: string
+                      name:
+                        type: string
+                    required:
+                      - id
+                      - type
+                      - name
+                    additionalProperties: {}
+                  validFrom:
+                    type: string
+                  credentialStatus:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      type:
+                        type: string
+                      statusPurpose:
+                        type: string
+                      status:
+                        type: string
+                        enum:
+                          - valid
+                          - revoked
+                          - expired
+                    required:
+                      - id
+                      - type
+                      - statusPurpose
+                      - status
+                    additionalProperties: {}
+                  credentialSubject:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      type:
+                        type: array
+                        items:
+                          type: string
+                      identifier:
+                        type: string
+                      achievement:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          type:
+                            type: array
+                            items:
+                              type: string
+                          name:
+                            type: string
+                        required:
+                          - id
+                          - type
+                          - name
+                        additionalProperties: {}
+                    required:
+                      - id
+                      - type
+                      - identifier
+                      - achievement
+                    additionalProperties: {}
+                  proof:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      verificationMethod:
+                        type: string
+                    required:
+                      - type
+                      - verificationMethod
+                    additionalProperties: {}
+                required:
+                  - "@context"
+                  - id
+                  - type
+                  - name
+                  - issuer
+                  - validFrom
+                  - credentialStatus
+                  - credentialSubject
+                additionalProperties: {}
+        "400":
+          description: The request did not match the expected shape.
+          content:
+            application/problem+json:
+              schema: *a1
+        "401":
+          description: Missing or invalid X-Savanna-Key.
+          content:
+            application/problem+json:
+              schema: *a1
+        "403":
+          description: This action needs the secret key.
+          content:
+            application/problem+json:
+              schema: *a1
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema: *a1
+      security:
+        - ApiKey: []
+  /v1/credentials/{id}:
+    get:
+      operationId: getV1CredentialsId
+      summary: Fetch an Open Badges credential
+      tags:
+        - CareerGateway
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Credential id.
+          schema:
+            type: string
+            minLength: 1
+            description: Credential id.
+      responses:
+        "200":
+          description: Credential JSON-LD and hosted status.
+          content:
+            application/ld+json:
+              schema:
+                type: object
+                properties:
+                  "@context":
+                    type: array
+                    items:
+                      type: string
+                  id:
+                    type: string
+                    format: uri
+                  type:
+                    type: array
+                    items:
+                      type: string
+                  name:
+                    type: string
+                  issuer:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      type:
+                        type: array
+                        items:
+                          type: string
+                      name:
+                        type: string
+                    required:
+                      - id
+                      - type
+                      - name
+                    additionalProperties: {}
+                  validFrom:
+                    type: string
+                  credentialStatus:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      type:
+                        type: string
+                      statusPurpose:
+                        type: string
+                      status:
+                        type: string
+                        enum:
+                          - valid
+                          - revoked
+                          - expired
+                    required:
+                      - id
+                      - type
+                      - statusPurpose
+                      - status
+                    additionalProperties: {}
+                  credentialSubject:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      type:
+                        type: array
+                        items:
+                          type: string
+                      identifier:
+                        type: string
+                      achievement:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          type:
+                            type: array
+                            items:
+                              type: string
+                          name:
+                            type: string
+                        required:
+                          - id
+                          - type
+                          - name
+                        additionalProperties: {}
+                    required:
+                      - id
+                      - type
+                      - identifier
+                      - achievement
+                    additionalProperties: {}
+                  proof:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      verificationMethod:
+                        type: string
+                    required:
+                      - type
+                      - verificationMethod
+                    additionalProperties: {}
+                required:
+                  - "@context"
+                  - id
+                  - type
+                  - name
+                  - issuer
+                  - validFrom
+                  - credentialStatus
+                  - credentialSubject
+                additionalProperties: {}
+        "401":
+          description: Missing or invalid X-Savanna-Key.
+          content:
+            application/problem+json:
+              schema: *a1
+        "403":
+          description: This key is not allowed from this origin.
+          content:
+            application/problem+json:
+              schema: *a1
+        "404":
+          description: No credential exists with this id.
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema: *a1
+      security:
+        - ApiKey: []
+  /v1/credentials/{id}/pdf:
+    get:
+      operationId: getV1CredentialsIdPdf
+      summary: Download the certificate PDF
+      tags:
+        - CareerGateway
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Credential id.
+          schema:
+            type: string
+            minLength: 1
+            description: Credential id.
+      responses:
+        "200":
+          description: Tagged PDF certificate.
+        "401":
+          description: Missing or invalid X-Savanna-Key.
+          content:
+            application/problem+json:
+              schema: *a1
+        "403":
+          description: This key is not allowed from this origin.
+          content:
+            application/problem+json:
+              schema: *a1
+        "404":
+          description: No credential exists with this id.
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema: *a1
+      security:
+        - ApiKey: []
+  /v1/credentials/{id}/revoke:
+    post:
+      operationId: postV1CredentialsIdRevoke
+      summary: Revoke a credential
+      description: Secret-key-only action. The status changes immediately.
+      tags:
+        - CareerGateway
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Credential id.
+          schema:
+            type: string
+            minLength: 1
+            description: Credential id.
+      responses:
+        "200":
+          description: Current credential status.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  status:
+                    type: string
+                    enum:
+                      - valid
+                      - revoked
+                      - expired
+                required:
+                  - id
+                  - status
+                additionalProperties: false
+        "401":
+          description: Missing or invalid X-Savanna-Key.
+          content:
+            application/problem+json:
+              schema: *a1
+        "403":
+          description: This action needs the secret key.
+          content:
+            application/problem+json:
+              schema: *a1
+        "404":
+          description: No credential exists with this id.
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema: *a1
+      security:
+        - ApiKey: []
+  /v1/jobs:
+    get:
+      operationId: getV1Jobs
+      summary: List CareerGateway jobs
+      tags:
+        - CareerGateway
+      responses:
+        "200":
+          description: Published job summaries.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jobs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        title:
+                          type: string
+                        employer:
+                          type: string
+                        location:
+                          type: string
+                        remote:
+                          type: boolean
+                      required:
+                        - id
+                        - title
+                        - employer
+                        - location
+                        - remote
+                      additionalProperties: false
+                required:
+                  - jobs
+                additionalProperties: false
+        "401":
+          description: Missing or invalid X-Savanna-Key.
+          content:
+            application/problem+json:
+              schema: *a1
+        "403":
+          description: This key is not allowed from this origin.
+          content:
+            application/problem+json:
+              schema: *a1
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema: *a1
+      security:
+        - ApiKey: []
+  /v1/jobs/{id}:
+    get:
+      operationId: getV1JobsId
+      summary: Get a CareerGateway job
+      tags:
+        - CareerGateway
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Career job id, for example J-9.
+          schema:
+            type: string
+            minLength: 1
+            description: Career job id, for example J-9.
+      responses:
+        "200":
+          description: The bilingual job card data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  title:
+                    type: string
+                  employer:
+                    type: string
+                  location:
+                    type: string
+                  remote:
+                    type: boolean
+                  payText:
+                    type:
+                      - string
+                      - "null"
+                  validThrough:
+                    type:
+                      - string
+                      - "null"
+                  employmentType:
+                    type: string
+                  applyUrl:
+                    type: string
+                  description:
+                    type: object
+                    properties:
+                      en:
+                        type: string
+                      am:
+                        type: string
+                      requirements:
+                        type: object
+                        properties:
+                          en:
+                            type: array
+                            items:
+                              type: string
+                          am:
+                            type: array
+                            items:
+                              type: string
+                        required:
+                          - en
+                          - am
+                        additionalProperties: false
+                    required:
+                      - en
+                      - am
+                    additionalProperties: false
+                  audioSummary:
+                    type: object
+                    properties:
+                      en:
+                        type: object
+                        properties:
+                          url:
+                            type: string
+                          durationSec:
+                            type: number
+                            minimum: 0
+                          transcript:
+                            type: string
+                        required:
+                          - url
+                          - durationSec
+                          - transcript
+                        additionalProperties: false
+                      am:
+                        type: object
+                        properties:
+                          url:
+                            type: string
+                          durationSec:
+                            type: number
+                            minimum: 0
+                          transcript:
+                            type: string
+                        required:
+                          - url
+                          - durationSec
+                          - transcript
+                        additionalProperties: false
+                    required:
+                      - en
+                      - am
+                    additionalProperties: false
+                required:
+                  - id
+                  - title
+                  - employer
+                  - location
+                  - remote
+                  - applyUrl
+                  - description
+                  - audioSummary
+                additionalProperties: false
+        "401":
+          description: Missing or invalid X-Savanna-Key.
+          content:
+            application/problem+json:
+              schema: *a1
+        "403":
+          description: This key is not allowed from this origin.
+          content:
+            application/problem+json:
+              schema: *a1
+        "404":
+          description: No job exists with this id.
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema: *a1
+      security:
+        - ApiKey: []
+  /v1/jobs/{id}.jsonld:
+    get:
+      operationId: getV1JobsIdJsonld
+      summary: Get a job as schema.org JobPosting JSON-LD
+      tags:
+        - CareerGateway
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Career job id, for example J-9.
+          schema:
+            type: string
+            minLength: 1
+            description: Career job id, for example J-9.
+      responses:
+        "200":
+          description: A schema.org JobPosting.
+          content:
+            application/ld+json:
+              schema:
+                type: object
+                properties:
+                  "@context":
+                    type: string
+                    format: uri
+                  "@type":
+                    type: string
+                    const: JobPosting
+                  identifier:
+                    type: string
+                  title:
+                    type: string
+                  description:
+                    type: string
+                  datePosted:
+                    type: string
+                  validThrough:
+                    type: string
+                  employmentType:
+                    type: string
+                  hiringOrganization:
+                    type: object
+                    properties:
+                      "@type":
+                        type: string
+                      name:
+                        type: string
+                    required:
+                      - "@type"
+                      - name
+                    additionalProperties: {}
+                  jobLocation:
+                    type: object
+                    properties:
+                      "@type":
+                        type: string
+                      address:
+                        type: object
+                        properties:
+                          "@type":
+                            type: string
+                          addressLocality:
+                            type: string
+                          addressCountry:
+                            type: string
+                        required:
+                          - "@type"
+                          - addressLocality
+                          - addressCountry
+                        additionalProperties: {}
+                    required:
+                      - "@type"
+                      - address
+                    additionalProperties: {}
+                  jobLocationType:
+                    type: string
+                  url:
+                    type: string
+                    format: uri
+                  directApply:
+                    type: boolean
+                required:
+                  - "@context"
+                  - "@type"
+                  - identifier
+                  - title
+                  - description
+                  - datePosted
+                  - employmentType
+                  - hiringOrganization
+                  - jobLocation
+                  - jobLocationType
+                  - url
+                  - directApply
+                additionalProperties: {}
+        "401":
+          description: Missing or invalid X-Savanna-Key.
+          content:
+            application/problem+json:
+              schema: *a1
+        "403":
+          description: This key is not allowed from this origin.
+          content:
+            application/problem+json:
+              schema: *a1
+        "404":
+          description: No job exists with this id.
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema: *a1
+      security:
+        - ApiKey: []
+  /verify/{id}:
+    get:
+      operationId: getVerifyId
+      summary: Verify a credential
+      description: "Public status page; send Accept: application/ld+json for the Open
+        Badges credential."
+      tags:
+        - CareerGateway
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Credential id.
+          schema:
+            type: string
+            minLength: 1
+            description: Credential id.
+      responses:
+        "200":
+          description: Accessible verification page.
+          content:
+            text/html:
+              schema:
+                type: string
+        "404":
+          description: No credential exists with this id.
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema: *a1
+      security: []
+  /verify/{id}/pdf:
+    get:
+      operationId: getVerifyIdPdf
+      summary: Download a public certificate PDF
+      description: The verification page is public, so its linked certificate PDF is
+        also available without an API key.
+      tags:
+        - CareerGateway
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Credential id.
+          schema:
+            type: string
+            minLength: 1
+            description: Credential id.
+      responses:
+        "200":
+          description: Tagged PDF certificate.
+        "404":
+          description: No credential exists with this id.
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema: *a1
+      security: []
+  /.well-known/did.json:
+    get:
+      operationId: getWellKnownDidJson
+      summary: Get the credential issuer DID document
+      tags:
+        - CareerGateway
+      responses:
+        "200":
+          description: Issuer public verification key.
+          content:
+            application/did+json:
+              schema:
+                type: object
+                properties:
+                  "@context":
+                    type: array
+                    items:
+                      type: string
+                  id:
+                    type: string
+                  controller:
+                    type: string
+                  verificationMethod:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        type:
+                          type: string
+                        controller:
+                          type: string
+                      required:
+                        - id
+                        - type
+                        - controller
+                      additionalProperties: {}
+                  assertionMethod:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - "@context"
+                  - id
+                  - controller
+                  - verificationMethod
+                  - assertionMethod
+                additionalProperties: {}
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema: *a1
+      security: []
+  /v1/lessons/{id}/pack:
+    get:
+      operationId: getV1LessonsIdPack
+      summary: Get an offline lesson pack manifest
+      tags:
+        - Offline
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Lesson id, e.g. L-102
+          schema:
+            type: string
+            pattern: ^[A-Za-z0-9_-]{1,80}$
+            description: Lesson id, e.g. L-102
+      responses:
+        "200":
+          description: Pack manifest with the list of included files and their SHA-256
+            checksums.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  version:
+                    type: number
+                  sizeBytes:
+                    type: number
+                required:
+                  - id
+                  - version
+                  - sizeBytes
+                additionalProperties: {}
+        "401":
+          description: Missing or invalid X-Savanna-Key.
+          content:
+            application/problem+json:
+              schema: *a1
+        "403":
+          description: This key is not allowed from this origin.
+          content:
+            application/problem+json:
+              schema: *a1
+        "404":
+          description: No pack is published for this lesson.
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema: *a1
+      security:
+        - ApiKey: []
+  /v1/lessons/{id}/pack.zip:
+    get:
+      operationId: getV1LessonsIdPackZip
+      summary: Download an offline lesson pack
+      tags:
+        - Offline
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Lesson id, e.g. L-102
+          schema:
+            type: string
+            pattern: ^[A-Za-z0-9_-]{1,80}$
+            description: Lesson id, e.g. L-102
+      responses:
+        "200":
+          description: The complete offline lesson ZIP.
+          headers:
+            Content-Disposition:
+              description: Attachment filename
+              schema:
+                type: string
+            Accept-Ranges:
+              description: Indicates byte-range support
+              schema:
+                type: string
+        "206":
+          description: Partial ZIP content (byte-range response).
+          headers:
+            Content-Range:
+              description: Returned byte range
+              schema:
+                type: string
+        "401":
+          description: Missing or invalid X-Savanna-Key.
+          content:
+            application/problem+json:
+              schema: *a1
+        "403":
+          description: This key is not allowed from this origin.
+          content:
+            application/problem+json:
+              schema: *a1
+        "404":
+          description: No pack ZIP is available for this lesson.
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema: *a1
+      security:
+        - ApiKey: []
+  /v1/preferences:
+    get:
+      operationId: getV1Preferences
+      summary: Get a user's saved preferences
+      tags:
+        - Preferences
+      parameters:
+        - name: X-Savanna-User
+          in: header
+          required: true
+          description: Opaque per-user id (16+ characters) issued by the host platform.
+            Treat it like a password; only its hash is stored.
+          schema:
+            type: string
+            minLength: 16
+            maxLength: 200
+            description: Opaque per-user id (16+ characters) issued by the host platform.
+              Treat it like a password; only its hash is stored.
+      responses:
+        "200":
+          description: The preferences object ({} if none saved yet).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ui:
+                    type: object
+                    propertyNames:
+                      type: string
+                    additionalProperties: {}
+                  captions:
+                    type: object
+                    propertyNames:
+                      type: string
+                    additionalProperties: {}
+                  sign:
+                    type: object
+                    propertyNames:
+                      type: string
+                    additionalProperties: {}
+                  ad:
+                    type: object
+                    propertyNames:
+                      type: string
+                    additionalProperties: {}
+                  offline:
+                    type: object
+                    propertyNames:
+                      type: string
+                    additionalProperties: {}
+                  jobs:
+                    type: object
+                    propertyNames:
+                      type: string
+                    additionalProperties: {}
+                additionalProperties: false
+        "400":
+          description: The request did not match the expected shape.
+          content:
+            application/problem+json:
+              schema: *a1
+        "401":
+          description: Missing or invalid X-Savanna-Key.
+          content:
+            application/problem+json:
+              schema: *a1
+        "403":
+          description: This key is not allowed from this origin.
+          content:
+            application/problem+json:
+              schema: *a1
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema: *a1
+      security:
+        - ApiKey: []
+    put:
+      operationId: putV1Preferences
+      summary: Save a user's preferences
+      description: Replaces the whole object. Each owner writes only their own
+        namespace (contract C3).
+      tags:
+        - Preferences
+      parameters:
+        - name: X-Savanna-User
+          in: header
+          required: true
+          description: Opaque per-user id (16+ characters) issued by the host platform.
+            Treat it like a password; only its hash is stored.
+          schema:
+            type: string
+            minLength: 16
+            maxLength: 200
+            description: Opaque per-user id (16+ characters) issued by the host platform.
+              Treat it like a password; only its hash is stored.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ui:
+                  type: object
+                  propertyNames:
+                    type: string
+                  additionalProperties: {}
+                captions:
+                  type: object
+                  propertyNames:
+                    type: string
+                  additionalProperties: {}
+                sign:
+                  type: object
+                  propertyNames:
+                    type: string
+                  additionalProperties: {}
+                ad:
+                  type: object
+                  propertyNames:
+                    type: string
+                  additionalProperties: {}
+                offline:
+                  type: object
+                  propertyNames:
+                    type: string
+                  additionalProperties: {}
+                jobs:
+                  type: object
+                  propertyNames:
+                    type: string
+                  additionalProperties: {}
+              additionalProperties: false
+      responses:
+        "200":
+          description: The saved preferences.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ui:
+                    type: object
+                    propertyNames:
+                      type: string
+                    additionalProperties: {}
+                  captions:
+                    type: object
+                    propertyNames:
+                      type: string
+                    additionalProperties: {}
+                  sign:
+                    type: object
+                    propertyNames:
+                      type: string
+                    additionalProperties: {}
+                  ad:
+                    type: object
+                    propertyNames:
+                      type: string
+                    additionalProperties: {}
+                  offline:
+                    type: object
+                    propertyNames:
+                      type: string
+                    additionalProperties: {}
+                  jobs:
+                    type: object
+                    propertyNames:
+                      type: string
+                    additionalProperties: {}
+                additionalProperties: false
+        "400":
+          description: The request did not match the expected shape.
+          content:
+            application/problem+json:
+              schema: *a1
+        "401":
+          description: Missing or invalid X-Savanna-Key.
+          content:
+            application/problem+json:
+              schema: *a1
+        "403":
+          description: This key is not allowed from this origin.
+          content:
+            application/problem+json:
+              schema: *a1
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema: *a1
+      security:
+        - ApiKey: []
+    delete:
+      operationId: deleteV1Preferences
+      summary: Delete a user's preferences (FR-A4 / NFR-S3)
+      description: "Permanently clears all stored preferences for the user. Alias:
+        /api/v1/preferences"
+      tags:
+        - Preferences
+      parameters:
+        - name: X-Savanna-User
+          in: header
+          required: true
+          description: Opaque per-user id (16+ characters) issued by the host platform.
+            Treat it like a password; only its hash is stored.
+          schema:
+            type: string
+            minLength: 16
+            maxLength: 200
+            description: Opaque per-user id (16+ characters) issued by the host platform.
+              Treat it like a password; only its hash is stored.
+      responses:
+        "200":
+          description: Confirmation of deletion.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    const: deleted
+                  message:
+                    type: string
+                required:
+                  - status
+                  - message
+                additionalProperties: false
+        "400":
+          description: The request did not match the expected shape.
+          content:
+            application/problem+json:
+              schema: *a1
+        "401":
+          description: Missing or invalid X-Savanna-Key.
+          content:
+            application/problem+json:
+              schema: *a1
+        "403":
+          description: This key is not allowed from this origin.
+          content:
+            application/problem+json:
+              schema: *a1
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema: *a1
+      security:
+        - ApiKey: []
+  /v1/preferences/export:
+    get:
+      operationId: getV1PreferencesExport
+      summary: Export a user's preferences (FR-A4 / NFR-S3)
+      description: "Exports all stored preferences for the user. Alias:
+        /api/v1/preferences/export"
+      tags:
+        - Preferences
+      parameters:
+        - name: X-Savanna-User
+          in: header
+          required: true
+          description: Opaque per-user id (16+ characters) issued by the host platform.
+            Treat it like a password; only its hash is stored.
+          schema:
+            type: string
+            minLength: 16
+            maxLength: 200
+            description: Opaque per-user id (16+ characters) issued by the host platform.
+              Treat it like a password; only its hash is stored.
+      responses:
+        "200":
+          description: Exported preferences file.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  exportedAt:
+                    type: string
+                  userHash:
+                    type: string
+                  preferences:
+                    type: object
+                    properties:
+                      ui:
+                        type: object
+                        propertyNames:
+                          type: string
+                        additionalProperties: {}
+                      captions:
+                        type: object
+                        propertyNames:
+                          type: string
+                        additionalProperties: {}
+                      sign:
+                        type: object
+                        propertyNames:
+                          type: string
+                        additionalProperties: {}
+                      ad:
+                        type: object
+                        propertyNames:
+                          type: string
+                        additionalProperties: {}
+                      offline:
+                        type: object
+                        propertyNames:
+                          type: string
+                        additionalProperties: {}
+                      jobs:
+                        type: object
+                        propertyNames:
+                          type: string
+                        additionalProperties: {}
+                    additionalProperties: false
+                required:
+                  - exportedAt
+                  - userHash
+                  - preferences
+                additionalProperties: false
+        "400":
+          description: The request did not match the expected shape.
+          content:
+            application/problem+json:
+              schema: *a1
+        "401":
+          description: Missing or invalid X-Savanna-Key.
+          content:
+            application/problem+json:
+              schema: *a1
+        "403":
+          description: This key is not allowed from this origin.
+          content:
+            application/problem+json:
+              schema: *a1
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema: *a1
+      security:
+        - ApiKey: []
+  /v1/lessons/{id}/share.html:
+    get:
+      operationId: getV1LessonsIdShareHtml
+      summary: Download standalone lesson in a file (Feature C)
+      description: Returns a single offline self-contained HTML file containing
+        embedded Opus audio, dual-language captions, interactive transcript, and
+        summary. No internet required once downloaded.
+      tags:
+        - Lessons
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Lesson id, e.g. L-102
+          schema:
+            type: string
+            description: Lesson id, e.g. L-102
+      responses:
+        "200":
+          description: Standalone lesson HTML file.
+          headers:
+            Content-Disposition:
+              description: Attachment header e.g. attachment; filename="lesson-L-102.html"
+              schema:
+                type: string
+            ETag:
+              description: SHA-256 checksum ETag of content
+              schema:
+                type: string
+        "400":
+          description: Lesson has no audio available.
+        "401":
+          description: Missing or invalid X-Savanna-Key.
+          content:
+            application/problem+json:
+              schema: *a1
+        "403":
+          description: This key is not allowed from this origin.
+          content:
+            application/problem+json:
+              schema: *a1
+        "404":
+          description: Unknown lesson.
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema: *a1
+      security:
+        - ApiKey: []
+  /v1/webhooks:
+    post:
+      operationId: postV1Webhooks
+      summary: Register a webhook address
+      description: Secret-key-only action. The host registers an address and we POST a
+        small JSON body whenever a matching event happens.
+      tags:
+        - Webhooks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: HTTPS address the host wants us to POST to.
+                events:
+                  description: Event names to subscribe to, for example credential.issued.
+                    Defaults to every event.
+                  type: array
+                  items:
+                    type: string
+                    minLength: 1
+              required:
+                - url
+      responses:
+        "201":
+          description: The new registration.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  url:
+                    type: string
+                  events:
+                    type: array
+                    items:
+                      type: string
+                required:
+                  - id
+                  - url
+                  - events
+                additionalProperties: false
+        "400":
+          description: The request did not match the expected shape.
+          content:
+            application/problem+json:
+              schema: *a1
+        "401":
+          description: Missing or invalid X-Savanna-Key.
+          content:
+            application/problem+json:
+              schema: *a1
+        "403":
+          description: This action needs the secret key.
+          content:
+            application/problem+json:
+              schema: *a1
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema: *a1
+      security:
+        - ApiKey: []
+    get:
+      operationId: getV1Webhooks
+      summary: List webhook registrations
+      tags:
+        - Webhooks
+      responses:
+        "200":
+          description: Every registration.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  webhooks:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        url:
+                          type: string
+                        events:
+                          type: array
+                          items:
+                            type: string
+                      required:
+                        - id
+                        - url
+                        - events
+                      additionalProperties: false
+                required:
+                  - webhooks
+                additionalProperties: false
+        "401":
+          description: Missing or invalid X-Savanna-Key.
+          content:
+            application/problem+json:
+              schema: *a1
+        "403":
+          description: This action needs the secret key.
+          content:
+            application/problem+json:
+              schema: *a1
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema: *a1
+      security:
+        - ApiKey: []
+  /v1/webhooks/{id}:
+    delete:
+      operationId: deleteV1WebhooksId
+      summary: Remove a webhook registration
+      tags:
+        - Webhooks
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Webhook registration id.
+          schema:
+            type: string
+            minLength: 1
+            description: Webhook registration id.
+      responses:
+        "204":
+          description: The registration was removed.
+        "401":
+          description: Missing or invalid X-Savanna-Key.
+          content:
+            application/problem+json:
+              schema: *a1
+        "403":
+          description: This action needs the secret key.
+          content:
+            application/problem+json:
+              schema: *a1
+        "404":
+          description: No registration exists with this id.
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema: *a1
+      security:
+        - ApiKey: []
+  /v1/whoami:
+    get:
+      operationId: getV1Whoami
+      summary: Check which key you are using
+      tags:
+        - Ops
+      responses:
+        "200":
+          description: Scope of the key.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  scope:
+                    type: string
+                    enum:
+                      - read
+                      - admin
+                  partner:
+                    type:
+                      - string
+                      - "null"
+                required:
+                  - scope
+                  - partner
+                additionalProperties: false
+        "401":
+          description: Missing or invalid X-Savanna-Key.
+          content:
+            application/problem+json:
+              schema: *a1
+        "403":
+          description: This key is not allowed from this origin.
+          content:
+            application/problem+json:
+              schema: *a1
+        "429":
+          description: Too many requests.
+          content:
+            application/problem+json:
+              schema: *a1
+      security:
+        - ApiKey: []
+components:
+  securitySchemes:
+    ApiKey:
+      type: apiKey
+      in: header
+      name: X-Savanna-Key
+      description: Publishable key (read) or secret key (admin).
+  schemas:
+    Problem:
+      type: object
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+          minimum: -9007199254740991
+          maximum: 9007199254740991
+        detail:
+          type: string
+      required:
+        - type
+        - title
+        - status
+      additionalProperties: {}
