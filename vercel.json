@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "rewrites": [{ "source": "/(.*)", "destination": "/api" }],
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "{api/src/routes/member3-amharic.json,contracts/fixtures/v1/**,module/src/job-card/**,module/src/credential/**,demo/sandbox-career/media/jobs/**,demo/sandbox-career/harness/**}"
+    }
+  },
+  "buildCommand": null,
+  "installCommand": "pnpm install --frozen-lockfile"
+}

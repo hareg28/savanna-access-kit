@@ -6,13 +6,15 @@ import { fileURLToPath } from "node:url";
 import { qrSvg } from "./qr.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const repo = path.resolve(here, "../../..");
+const repo = process.env.VERCEL === "1" ? process.cwd() : path.resolve(here, "../../..");
 const fixtures = path.join(repo, "contracts/fixtures/v1");
 const port = Number(process.env.PORT ?? 4020);
-const publicBaseUrl = process.env.PUBLIC_BASE_URL ?? `http://localhost:${port}`;
+const publicBaseUrl =
+  process.env.PUBLIC_BASE_URL ??
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : `http://localhost:${port}`);
 const PK = "pk_live_demo";
 const SK = "sk_live_demo";
-const credFile = path.join(here, "credentials-db.json");
+const credFile = path.join(repo, "demo/sandbox-career/harness/credentials-db.json");
 const amharicContent = JSON.parse(
   readFileSync(path.join(repo, "api/src/routes/member3-amharic.json"), "utf8"),
 );
@@ -581,7 +583,7 @@ const staticFiles = {
   ),
 };
 
-const server = createServer(async (req, res) => {
+export const handleRequest = async (req, res) => {
   try {
     if (req.method === "OPTIONS") {
       send(res, 204, "");
@@ -809,8 +811,12 @@ const server = createServer(async (req, res) => {
     console.error(err);
     problem(res, 500, "Server error", "The career API hit an unexpected error.");
   }
-});
+};
 
-server.listen(port, () => {
-  console.log(`Career Gateway on ${publicBaseUrl}`);
-});
+const server = createServer(handleRequest);
+
+if (process.env.VERCEL !== "1") {
+  server.listen(port, () => {
+    console.log(`Career Gateway on ${publicBaseUrl}`);
+  });
+}
